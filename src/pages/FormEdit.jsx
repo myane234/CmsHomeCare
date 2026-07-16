@@ -30,18 +30,16 @@ export default function FormEdit() {
   }
 
   return (
-    <div className="layanan-form-page">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Edit Layanan</h1>
-          <p className="page-subtitle">Perbarui data layanan HomeCare</p>
-        </div>
+    <div>
+      <div className="mb-5">
+        <h1 className="page-title">Edit Layanan</h1>
+        <p className="page-subtitle">Perbarui data layanan HomeCare</p>
       </div>
 
       {loading ? (
-        <p className="empty-state">Memuat data...</p>
+        <p className="p-10 text-center text-sm text-slate-500">Memuat data...</p>
       ) : notFound ? (
-        <p className="empty-state">Layanan tidak ditemukan.</p>
+        <p className="p-10 text-center text-sm text-slate-500">Layanan tidak ditemukan.</p>
       ) : (
         <LayananForm
           mode="edit"
