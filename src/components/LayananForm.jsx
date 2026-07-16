@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import './LayananForm.css';
 
 const KATEGORI_OPTIONS = [
-  'Ibu & Anak',
+  'Ibu dan Anak',
   'Perawatan Luka',
   'Medical Checkup',
   'Fisioterapi',
-  'Pemasangan & Penggantian Alat Medis',
-  'Caregiver',
+  'Pemasangan dan Penggantian Alat Medis',
 ];
 
 const emptyForm = {
