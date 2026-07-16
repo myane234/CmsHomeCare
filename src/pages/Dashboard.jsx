@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllLayanan } from '../data/layananData';
 import { getSession } from '../utils/auth';
-import './Dashboard.css';
 
 export default function Dashboard() {
   const [layanan, setLayanan] = useState([]);
@@ -21,71 +20,83 @@ export default function Dashboard() {
   const totalNonaktif = layanan.filter((l) => l.status === 'nonaktif').length;
 
   const summaryCards = [
-    { label: 'Total Layanan', value: totalLayanan, icon: '🩺', color: 'blue' },
-    { label: 'Layanan Aktif', value: totalAktif, icon: '✅', color: 'green' },
-    { label: 'Layanan Nonaktif', value: totalNonaktif, icon: '⏸️', color: 'gray' },
+    { label: 'Total Layanan', value: totalLayanan, icon: '🩺' },
+    { label: 'Layanan Aktif', value: totalAktif, icon: '✅' },
+    { label: 'Layanan Nonaktif', value: totalNonaktif, icon: '⏸️' },
   ];
 
   return (
-    <div className="dashboard-page">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Dashboard</h1>
-          <p className="page-subtitle">
-            Selamat datang kembali, {session?.name || 'Admin'} 👋
-          </p>
-        </div>
+    <div>
+      <div className="mb-6">
+        <h1 className="page-title">Dashboard</h1>
+        <p className="page-subtitle">
+          Selamat datang kembali, {session?.name || 'Admin'} 👋
+        </p>
       </div>
 
-      <div className="summary-grid">
+      <div className="mb-7 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {summaryCards.map((card) => (
-          <div className={`summary-card summary-${card.color}`} key={card.label}>
-            <div className="summary-icon">{card.icon}</div>
+          <div className="card flex items-center gap-3.5 p-5" key={card.label}>
+            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-primary-light text-xl">
+              {card.icon}
+            </div>
             <div>
-              <div className="summary-value">{card.value}</div>
-              <div className="summary-label">{card.label}</div>
+              <div className="text-2xl font-bold">{card.value}</div>
+              <div className="text-[13px] text-slate-500">{card.label}</div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="dashboard-recent">
-        <div className="dashboard-recent-header">
-          <h2>Layanan Terbaru</h2>
-          <Link to="/layanan" className="btn btn-outline">
+      <div className="card overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+          <h2 className="text-base font-bold">Layanan Terbaru</h2>
+          <Link to="/layanan" className="btn-outline">
             Lihat Semua
           </Link>
         </div>
 
         {loading ? (
-          <p className="empty-state">Memuat data...</p>
+          <p className="p-10 text-center text-sm text-slate-500">Memuat data...</p>
         ) : layanan.length === 0 ? (
-          <p className="empty-state">Belum ada data layanan.</p>
+          <p className="p-10 text-center text-sm text-slate-500">Belum ada data layanan.</p>
         ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Nama Layanan</th>
-                <th>Kategori</th>
-                <th>Harga</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {layanan.slice(0, 5).map((item) => (
-                <tr key={item.id}>
-                  <td>{item.nama}</td>
-                  <td>{item.kategori}</td>
-                  <td>Rp {Number(item.harga).toLocaleString('id-ID')}</td>
-                  <td>
-                    <span className={`badge badge-${item.status}`}>
-                      {item.status === 'aktif' ? 'Aktif' : 'Nonaktif'}
-                    </span>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[500px] border-collapse">
+              <thead>
+                <tr>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Nama Layanan
+                  </th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Kategori
+                  </th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Harga
+                  </th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Status
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {layanan.slice(0, 5).map((item) => (
+                  <tr key={item.id} className="hover:bg-slate-50">
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.nama}</td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.kategori}</td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
+                      Rp {Number(item.harga).toLocaleString('id-ID')}
+                    </td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
+                      <span className={`badge badge-${item.status}`}>
+                        {item.status === 'aktif' ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

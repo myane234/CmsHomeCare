@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllLayanan, deleteLayanan } from '../data/layananData';
-import './PageLayanan.css';
 
 export default function PageLayanan() {
   const [layanan, setLayanan] = useState([]);
@@ -36,93 +35,103 @@ export default function PageLayanan() {
   }
 
   return (
-    <div className="layanan-page">
-      <div className="page-header">
+    <div>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="page-title">Layanan</h1>
           <p className="page-subtitle">Kelola semua layanan HomeCare di sini</p>
         </div>
-        <Link to="/layanan/tambah" className="btn btn-primary">
+        <Link to="/layanan/tambah" className="btn-primary">
           + Tambah Layanan
         </Link>
       </div>
 
-      <div className="layanan-toolbar">
+      <div className="mb-4">
         <input
           type="text"
           placeholder="Cari nama atau kategori layanan..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="form-input layanan-search"
+          className="form-input max-w-full sm:max-w-[340px]"
         />
       </div>
 
-      <div className="layanan-table-wrapper">
+      <div className="card overflow-hidden">
         {loading ? (
-          <p className="empty-state">Memuat data...</p>
+          <p className="p-10 text-center text-sm text-slate-500">Memuat data...</p>
         ) : filtered.length === 0 ? (
-          <p className="empty-state">Tidak ada layanan ditemukan.</p>
+          <p className="p-10 text-center text-sm text-slate-500">Tidak ada layanan ditemukan.</p>
         ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Nama Layanan</th>
-                <th>Kategori</th>
-                <th>Harga</th>
-                <th>Durasi</th>
-                <th>Status</th>
-                <th style={{ textAlign: 'right' }}>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.nama}</td>
-                  <td>{item.kategori}</td>
-                  <td>Rp {Number(item.harga).toLocaleString('id-ID')}</td>
-                  <td>{item.durasi} menit</td>
-                  <td>
-                    <span className={`badge badge-${item.status}`}>
-                      {item.status === 'aktif' ? 'Aktif' : 'Nonaktif'}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="table-actions">
-                      <Link to={`/layanan/${item.id}/edit`} className="btn btn-outline btn-sm">
-                        Edit
-                      </Link>
-                      <button
-                        className="btn btn-danger btn-sm"
-                        onClick={() => setDeleteTarget(item)}
-                      >
-                        Hapus
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px] border-collapse">
+              <thead>
+                <tr>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nama Layanan</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Kategori</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Harga</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Durasi</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Status</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-slate-500">Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((item) => (
+                  <tr key={item.id} className="hover:bg-slate-50">
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.nama}</td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.kategori}</td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
+                      Rp {Number(item.harga).toLocaleString('id-ID')}
+                    </td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.durasi} menit</td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
+                      <span className={`badge badge-${item.status}`}>
+                        {item.status === 'aktif' ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                    </td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
+                      <div className="flex justify-end gap-2">
+                        <Link to={`/layanan/${item.id}/edit`} className="btn-outline btn-sm">
+                          Edit
+                        </Link>
+                        <button
+                          className="btn-danger btn-sm"
+                          onClick={() => setDeleteTarget(item)}
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
       {deleteTarget && (
-        <div className="modal-overlay" onClick={() => !deleting && setDeleteTarget(null)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3>Hapus Layanan?</h3>
-            <p>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-5"
+          onClick={() => !deleting && setDeleteTarget(null)}
+        >
+          <div
+            className="w-full max-w-[380px] rounded-card bg-white p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-2.5 text-lg font-bold">Hapus Layanan?</h3>
+            <p className="mb-5 text-sm text-slate-500">
               Yakin ingin menghapus <strong>{deleteTarget.nama}</strong>? Tindakan ini
               tidak dapat dibatalkan.
             </p>
-            <div className="modal-actions">
+            <div className="flex justify-end gap-2.5">
               <button
-                className="btn btn-outline"
+                className="btn-outline"
                 onClick={() => setDeleteTarget(null)}
                 disabled={deleting}
               >
                 Batal
               </button>
-              <button className="btn btn-danger" onClick={confirmDelete} disabled={deleting}>
+              <button className="btn-danger" onClick={confirmDelete} disabled={deleting}>
                 {deleting ? 'Menghapus...' : 'Ya, Hapus'}
               </button>
             </div>
