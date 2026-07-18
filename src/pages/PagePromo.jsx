@@ -93,8 +93,10 @@ export default function PagePromo() {
             <tbody>
               {filtered.map((item) => {
                 const kode = item.kode_promo ?? item.kodePromo ?? item.kode ?? '-';
-                const persen = item.potongan_harga ?? item.potonganHarga ?? '-';
-                const tanggal = item.tanggal_berakhir ?? item.tanggalBerakhir ?? '-';
+                const persenRaw = item.potongan_harga ?? item.potonganHarga ?? '-';
+                const persenFormatted = persenRaw !== '-' ? `${Number(persenRaw)}%` : '-';
+                const tanggalRaw = item.tanggal_berakhir ?? item.tanggalBerakhir ?? '-';
+                const tanggalFormatted = tanggalRaw !== '-' ? String(tanggalRaw).split('T')[0] : '-';
                 const status = item.status_promo ?? item.statusPromo ?? '-';
 
                 const statusBadge = String(status).toLowerCase().includes('aktif') ? 'aktif' : 'nonaktif';
@@ -102,8 +104,8 @@ export default function PagePromo() {
                 return (
                   <tr key={String(getId(item)) || kode}>
                     <td>{kode}</td>
-                    <td>{persen} %</td>
-                    <td>{tanggal}</td>
+                    <td>{persenFormatted}</td>
+                    <td>{tanggalFormatted}</td>
                     <td>
                       <span className={`badge badge-${statusBadge}`}>{status}</span>
                     </td>
