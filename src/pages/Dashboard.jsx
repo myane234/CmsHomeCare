@@ -66,6 +66,9 @@ export default function Dashboard() {
               <thead>
                 <tr>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Gambar
+                  </th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                     Nama Layanan
                   </th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
@@ -82,6 +85,19 @@ export default function Dashboard() {
               <tbody>
                 {layanan.slice(0, 5).map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50">
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
+                      {item.gambar ? (
+                        <img
+                          src={item.gambar}
+                          alt={item.nama}
+                          className="h-12 w-16 rounded-lg border border-slate-200 object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-12 w-16 items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 text-[10px] text-slate-400">
+                          No img
+                        </div>
+                      )}
+                    </td>
                     <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.nama}</td>
                     <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.kategori}</td>
                     <td className="border-b border-slate-200 px-4 py-3.5 text-sm">

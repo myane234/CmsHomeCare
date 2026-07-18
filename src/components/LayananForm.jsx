@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 
 const KATEGORI_OPTIONS = [
-  'Ibu & Anak',
+  'Ibu dan Anak',
   'Perawatan Luka',
   'Medical Checkup',
   'Fisioterapi',
-  'Pemasangan & Penggantian Alat Medis',
-  'Caregiver',
+  'Pemasangan dan Penggantian Alat Medis',
 ];
 
 const emptyForm = {
@@ -16,7 +15,7 @@ const emptyForm = {
   harga: '',
   durasi: '',
   status: 'aktif',
-  gambar: '',
+  gambar: null,
 };
 
 export default function LayananForm({ initialData, onSubmit, submitting, mode }) {
@@ -26,7 +25,7 @@ export default function LayananForm({ initialData, onSubmit, submitting, mode })
 
   useEffect(() => {
     if (initialData) {
-      setForm({ ...emptyForm, ...initialData });
+      setForm({ ...emptyForm, ...initialData, gambar: null });
       setPreview(initialData.gambar || '');
     }
   }, [initialData]);
@@ -40,12 +39,11 @@ export default function LayananForm({ initialData, onSubmit, submitting, mode })
   function handleImageChange(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Simpan File object ke state, bukan base64
+    setForm((prev) => ({ ...prev, gambar: file }));
+    // Preview tetap pakai dataURL hanya untuk tampilan
     const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result;
-      setPreview(dataUrl);
-      setForm((prev) => ({ ...prev, gambar: dataUrl }));
-    };
+    reader.onload = () => setPreview(reader.result);
     reader.readAsDataURL(file);
   }
 
