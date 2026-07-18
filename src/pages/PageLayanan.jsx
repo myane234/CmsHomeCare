@@ -66,6 +66,7 @@ export default function PageLayanan() {
             <table className="w-full min-w-[700px] border-collapse">
               <thead>
                 <tr>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Gambar</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nama Layanan</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Kategori</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Harga</th>
@@ -77,6 +78,19 @@ export default function PageLayanan() {
               <tbody>
                 {filtered.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50">
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
+                      {item.gambar ? (
+                        <img
+                          src={item.gambar}
+                          alt={item.nama}
+                          className="h-14 w-20 rounded-lg border border-slate-200 object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-14 w-20 items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 text-[11px] text-slate-400">
+                          No img
+                        </div>
+                      )}
+                    </td>
                     <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.nama}</td>
                     <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.kategori}</td>
                     <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
