@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../utils/auth';
 import logo from '../assets/logo.png';
-import './LoginAdminCms.css';
 
 export default function LoginAdminCms() {
   const navigate = useNavigate();
@@ -26,7 +25,6 @@ export default function LoginAdminCms() {
     }
 
     setLoading(true);
-    // simulate a short request delay for UX
     setTimeout(() => {
       const result = login(form.email, form.password);
       setLoading(false);
@@ -39,14 +37,16 @@ export default function LoginAdminCms() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <div className="login-logo">
-          <img src={logo} alt="Smartcare" className="login-logo-img" />
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-accent to-slate-100 p-5">
+      <div className="w-full max-w-[380px] rounded-card bg-white p-7 shadow-card sm:p-9">
+        <div className="mb-1 flex items-center justify-center">
+          <img src={logo} alt="Smartcare" className="h-14 w-auto object-contain" />
         </div>
-        <p className="login-subtitle">Masuk ke panel admin CMS HomeCare</p>
+        <p className="mb-7 text-center text-[13px] text-slate-500">
+          Masuk ke panel admin CMS HomeCare
+        </p>
 
-        <form onSubmit={handleSubmit} className="login-form">
+        <form onSubmit={handleSubmit} className="flex flex-col">
           <label className="form-label">Email</label>
           <input
             type="email"
@@ -59,19 +59,19 @@ export default function LoginAdminCms() {
           />
 
           <label className="form-label">Password</label>
-          <div className="password-wrapper">
+          <div className="relative">
             <input
               type={showPassword ? 'text' : 'password'}
               name="password"
               placeholder="••••••••"
               value={form.password}
               onChange={handleChange}
-              className="form-input"
+              className="form-input pr-20"
               autoComplete="current-password"
             />
             <button
               type="button"
-              className="password-toggle"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-primary"
               onClick={() => setShowPassword((s) => !s)}
               tabIndex={-1}
             >
@@ -79,14 +79,18 @@ export default function LoginAdminCms() {
             </button>
           </div>
 
-          {error && <div className="login-error">{error}</div>}
+          {error && (
+            <div className="mt-3.5 rounded-lg bg-danger-bg px-3 py-2.5 text-[13px] text-danger">
+              {error}
+            </div>
+          )}
 
-          <button type="submit" className="btn btn-primary login-submit" disabled={loading}>
+          <button type="submit" className="btn-primary mt-6 w-full py-3 text-[15px]" disabled={loading}>
             {loading ? 'Memproses...' : 'Masuk'}
           </button>
         </form>
 
-        <p className="login-hint">
+        <p className="mt-5 text-center text-[11px] text-slate-500">
           Demo: admin@smarthomecare.com / admin123
         </p>
       </div>

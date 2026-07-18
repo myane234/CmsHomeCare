@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
-import './LayananForm.css';
 
 const KATEGORI_OPTIONS = [
-  'Ibu & Anak',
+  'Ibu dan Anak',
   'Perawatan Luka',
   'Medical Checkup',
   'Fisioterapi',
-  'Pemasangan & Penggantian Alat Medis',
-  'Caregiver',
+  'Pemasangan dan Penggantian Alat Medis',
 ];
 
 const emptyForm = {
@@ -17,7 +15,7 @@ const emptyForm = {
   harga: '',
   durasi: '',
   status: 'aktif',
-  gambar: '',
+  gambar: null,
 };
 
 export default function LayananForm({ initialData, onSubmit, submitting, mode }) {
@@ -27,7 +25,7 @@ export default function LayananForm({ initialData, onSubmit, submitting, mode })
 
   useEffect(() => {
     if (initialData) {
-      setForm({ ...emptyForm, ...initialData });
+      setForm({ ...emptyForm, ...initialData, gambar: null });
       setPreview(initialData.gambar || '');
     }
   }, [initialData]);
@@ -41,12 +39,11 @@ export default function LayananForm({ initialData, onSubmit, submitting, mode })
   function handleImageChange(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Simpan File object ke state, bukan base64
+    setForm((prev) => ({ ...prev, gambar: file }));
+    // Preview tetap pakai dataURL hanya untuk tampilan
     const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result;
-      setPreview(dataUrl);
-      setForm((prev) => ({ ...prev, gambar: dataUrl }));
-    };
+    reader.onload = () => setPreview(reader.result);
     reader.readAsDataURL(file);
   }
 
@@ -71,9 +68,9 @@ export default function LayananForm({ initialData, onSubmit, submitting, mode })
   }
 
   return (
-    <form className="layanan-form" onSubmit={handleSubmit}>
-      <div className="form-grid">
-        <div className="form-col">
+    <form className="card max-w-3xl p-5 sm:p-7" onSubmit={handleSubmit}>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.4fr_1fr]">
+        <div className="flex flex-col">
           <label className="form-label">Nama Layanan</label>
           <input
             type="text"
@@ -104,13 +101,13 @@ export default function LayananForm({ initialData, onSubmit, submitting, mode })
             name="deskripsi"
             value={form.deskripsi}
             onChange={handleChange}
-            className="form-input form-textarea"
+            className="form-input resize-y"
             placeholder="Jelaskan tentang layanan ini..."
             rows={5}
           />
           {errors.deskripsi && <span className="field-error">{errors.deskripsi}</span>}
 
-          <div className="form-row-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="form-label">Harga (Rp)</label>
               <input
@@ -140,17 +137,27 @@ export default function LayananForm({ initialData, onSubmit, submitting, mode })
           </div>
 
           <label className="form-label">Status</label>
-          <div className="status-toggle">
+          <div className="mt-1 flex gap-2.5">
             <button
               type="button"
-              className={form.status === 'aktif' ? 'status-btn active-on' : 'status-btn'}
+              className={
+                'flex-1 rounded-lg border px-3 py-2.5 text-[13px] font-semibold ' +
+                (form.status === 'aktif'
+                  ? 'border-primary bg-primary-light text-primary-dark'
+                  : 'border-slate-200 bg-white text-slate-500')
+              }
               onClick={() => setForm((prev) => ({ ...prev, status: 'aktif' }))}
             >
               Aktif
             </button>
             <button
               type="button"
-              className={form.status === 'nonaktif' ? 'status-btn active-off' : 'status-btn'}
+              className={
+                'flex-1 rounded-lg border px-3 py-2.5 text-[13px] font-semibold ' +
+                (form.status === 'nonaktif'
+                  ? 'border-danger bg-danger-bg text-danger'
+                  : 'border-slate-200 bg-white text-slate-500')
+              }
               onClick={() => setForm((prev) => ({ ...prev, status: 'nonaktif' }))}
             >
               Nonaktif
@@ -158,15 +165,21 @@ export default function LayananForm({ initialData, onSubmit, submitting, mode })
           </div>
         </div>
 
-        <div className="form-col">
+        <div className="flex flex-col">
           <label className="form-label">Gambar Layanan</label>
-          <div className="image-upload">
+          <div className="flex flex-col items-center gap-3.5 rounded-card border border-dashed border-slate-200 bg-slate-50 p-5">
             {preview ? (
-              <img src={preview} alt="Preview" className="image-preview" />
+              <img
+                src={preview}
+                alt="Preview"
+                className="aspect-square w-full max-w-[220px] rounded-lg object-cover"
+              />
             ) : (
-              <div className="image-placeholder">Belum ada gambar</div>
+              <div className="flex aspect-square w-full max-w-[220px] items-center justify-center rounded-lg border border-slate-200 bg-white p-2.5 text-center text-[13px] text-slate-500">
+                Belum ada gambar
+              </div>
             )}
-            <label className="btn btn-outline upload-btn">
+            <label className="btn-outline block w-full max-w-[220px] cursor-pointer text-center">
               Pilih Gambar
               <input type="file" accept="image/*" onChange={handleImageChange} hidden />
             </label>
@@ -174,11 +187,11 @@ export default function LayananForm({ initialData, onSubmit, submitting, mode })
         </div>
       </div>
 
-      <div className="form-actions">
-        <a href="/layanan" className="btn btn-outline">
+      <div className="mt-7 flex flex-col-reverse justify-end gap-2.5 border-t border-slate-200 pt-5 sm:flex-row">
+        <a href="/layanan" className="btn-outline text-center">
           Batal
         </a>
-        <button type="submit" className="btn btn-primary" disabled={submitting}>
+        <button type="submit" className="btn-primary" disabled={submitting}>
           {submitting
             ? 'Menyimpan...'
             : mode === 'edit'
