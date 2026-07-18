@@ -5,6 +5,7 @@ import './Sidebar.css';
 const menuItems = [
   { to: '/dashboard', label: 'Dashboard', icon: '📊' },
   { to: '/layanan', label: 'Layanan', icon: '🩺' },
+  { to: '/promo', label: 'Promo', icon: '🏷️' },
 ];
 
 export default function Sidebar() {

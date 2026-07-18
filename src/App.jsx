@@ -2,8 +2,11 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginAdminCms from './pages/LoginAdminCms';
 import Dashboard from './pages/Dashboard';
 import PageLayanan from './pages/PageLayanan';
+import PagePromo from './pages/PagePromo';
 import FormTambah from './pages/FormTambah';
 import FormEdit from './pages/FormEdit';
+import PromoTambah from './pages/PromoTambah';
+import PromoEdit from './pages/PromoEdit';
 import AdminLayout from './components/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -23,6 +26,9 @@ function App() {
       >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/layanan" element={<PageLayanan />} />
+        <Route path="/promo" element={<PagePromo />} />
+        <Route path="/promo/tambah" element={<PromoTambah />} />
+        <Route path="/promo/:id_promo/edit" element={<PromoEdit />} />
         <Route path="/layanan/tambah" element={<FormTambah />} />
         <Route path="/layanan/:id/edit" element={<FormEdit />} />
       </Route>
