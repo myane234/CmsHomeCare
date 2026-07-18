@@ -1,5 +1,24 @@
 import { URL } from '../utils/getUrl.js'
 
+function resolveImageUrl(value) {
+  if (!value || typeof value !== 'string') return ''
+
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:image/')) {
+    return trimmed
+  }
+
+  const apiBase = URL === '/api' ? (import.meta.env.VITE_URLDEV || 'http://localhost:8000/api') : URL
+  const baseUrl = apiBase.replace(/\/api\/?$/, '')
+  const fallbackOrigin = typeof window !== 'undefined' ? window.location.origin : ''
+  const origin = baseUrl || fallbackOrigin
+  const normalizedPath = trimmed.replace(/^\/+/, '')
+
+  return origin ? `${origin}/${normalizedPath}` : normalizedPath
+}
+
 function mapApiItem(item) {
   return {
     id: item.id_layanan ?? item.id,
@@ -9,20 +28,22 @@ function mapApiItem(item) {
     durasi: item.durasi_menit ?? item.durasi ?? 0,
     status: item.status ?? 'aktif',
     deskripsi: item.deskripsi_layanan ?? '',
-    gambar: item.foto_layanan ?? '',
+    gambar: resolveImageUrl(item.foto_layanan ?? item.gambar ?? ''),
   }
 }
 
-function toBackendPayload(item) {
-  return {
-    nama_layanan: item.nama,
-    kategori_layanan: item.kategori,
-    harga: item.harga,
-    durasi_menit: item.durasi,
-    status: item.status,
-    deskripsi: item.deskripsi_layanan,
-    gambar: item.foto_layanan,
+function toFormData(item) {
+  const fd = new FormData();
+  fd.append('nama_layanan', item.nama ?? '');
+  fd.append('kategori_layanan', item.kategori ?? '');
+  fd.append('harga', item.harga ?? 0);
+  fd.append('durasi_menit', item.durasi ?? 0);
+  fd.append('status', item.status ?? 'aktif');
+  fd.append('deskripsi_layanan', item.deskripsi ?? '');
+  if (item.gambar instanceof File) {
+    fd.append('foto_layanan', item.gambar);
   }
+  return fd;
 }
 
 async function parseJsonResponse(response) {
@@ -70,10 +91,8 @@ export async function getLayananById(id) {
 export async function createLayanan(payload) {
   const res = await fetch(`${URL}/layanan/`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(toBackendPayload(payload)),
+    body: toFormData(payload),
+    // Tidak set Content-Type agar browser auto-set multipart boundary
   })
 
   const body = await parseJsonResponse(res)
@@ -82,12 +101,12 @@ export async function createLayanan(payload) {
 }
 
 export async function updateLayanan(id, payload) {
+  const fd = toFormData(payload);
+  fd.append('_method', 'PUT'); // Laravel method spoofing untuk multipart
   const res = await fetch(`${URL}/layanan/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(toBackendPayload(payload)),
+    method: 'POST',
+    body: fd,
+    // Tidak set Content-Type agar browser auto-set multipart boundary
   })
 
   const body = await parseJsonResponse(res)
