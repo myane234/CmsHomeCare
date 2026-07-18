@@ -1,94 +1,78 @@
-:root {
-  --primary: #1f9d5a;
-  --primary-dark: #16794a;
-  --primary-light: #e3f9ea;
-  --accent-bg: #e7ecfb;
-  --bg: #f5f7fa;
-  --sidebar-bg: #ffffff;
-  --text: #1b1b1b;
-  --text-muted: #6b7280;
-  --border: #e5e7eb;
-  --danger: #e5484d;
-  --danger-bg: #fdeceb;
-  --white: #ffffff;
-  --radius: 12px;
-  --shadow: 0 2px 10px rgba(16, 24, 40, 0.06);
-  font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1f9d5a;
+  --color-primary-dark: #16794a;
+  --color-primary-light: #e3f9ea;
+  --color-accent: #e7ecfb;
+  --color-brand-blue: #3d5aa8;
+  --color-brand-teal: #2aa893;
+  --color-danger: #e5484d;
+  --color-danger-bg: #fdeceb;
+
+  --radius-card: 12px;
+  --shadow-card: 0 2px 10px rgba(16, 24, 40, 0.06);
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
-  margin: 0;
-  padding: 0;
 }
 
 body {
-  background: var(--bg);
-  color: var(--text);
+  @apply bg-slate-50 text-slate-900;
+  font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-button {
-  font-family: inherit;
-  cursor: pointer;
-}
+@layer components {
+  .btn,
+  .btn-primary,
+  .btn-outline,
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary-dark;
+  }
+  .btn-outline {
+    @apply border border-slate-200 bg-white text-slate-900 hover:border-primary hover:text-primary;
+  }
+  .btn-danger {
+    @apply bg-danger-bg text-danger hover:bg-danger hover:text-white;
+  }
+  .btn-sm {
+    @apply px-3.5 py-1.5 text-[13px];
+  }
 
-input, select, textarea {
-  font-family: inherit;
-}
+  .form-label {
+    @apply mt-3.5 mb-1.5 block text-[13px] font-semibold text-slate-900 first:mt-0;
+  }
+  .form-input {
+    @apply w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-primary;
+  }
+  .field-error {
+    @apply mt-1 block text-xs text-danger;
+  }
 
-a {
-  text-decoration: none;
-  color: inherit;
-}
+  .badge {
+    @apply inline-block rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+  .badge-aktif {
+    @apply bg-primary-light text-primary-dark;
+  }
+  .badge-nonaktif {
+    @apply bg-slate-100 text-slate-500;
+  }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border-radius: 8px;
-  border: none;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
+  .page-title {
+    @apply text-xl font-bold text-slate-900 sm:text-2xl;
+  }
+  .page-subtitle {
+    @apply mt-1 text-sm text-slate-500;
+  }
 
-.btn-primary {
-  background: var(--primary);
-  color: var(--white);
-}
-
-.btn-primary:hover {
-  background: var(--primary-dark);
-}
-
-.btn-outline {
-  background: var(--white);
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-
-.btn-outline:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-}
-
-.btn-danger {
-  background: var(--danger-bg);
-  color: var(--danger);
-}
-
-.btn-danger:hover {
-  background: var(--danger);
-  color: var(--white);
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  .card {
+    @apply rounded-card border border-slate-200 bg-white shadow-card;
+  }
 }
