@@ -1,16 +1,9 @@
 import { useState, useEffect } from 'react';
-
-const KATEGORI_OPTIONS = [
-  'Ibu dan Anak',
-  'Perawatan Luka',
-  'Medical Checkup',
-  'Fisioterapi',
-  'Pemasangan dan Penggantian Alat Medis',
-];
+import { getKategoriLayanan } from '../data/layananData.js';
 
 const emptyForm = {
   nama: '',
-  kategori: KATEGORI_OPTIONS[0],
+  kategori: '',
   deskripsi: '',
   harga: '',
   durasi: '',
@@ -20,8 +13,27 @@ const emptyForm = {
 
 export default function LayananForm({ initialData, onSubmit, submitting, mode }) {
   const [form, setForm] = useState(emptyForm);
+  const [kategoriOptions, setKategoriOptions] = useState([]); // FIX: Menggunakan k kecil sesuai standar camelCase
   const [errors, setErrors] = useState({});
   const [preview, setPreview] = useState('');
+
+  useEffect(() => {
+    async function fetchKategori() {
+      try {
+        const data = await getKategoriLayanan();
+        setKategoriOptions(data);
+        
+        // Jika sedang tambah data baru (bukan edit), otomatis pasang opsi pertama sebagai default
+        if (!initialData && data.length > 0) {
+          setForm((prev) => ({ ...prev, kategori: data[0] }));
+        }
+      } catch (err) {
+        console.error('Gagal memuat kategori layanan:', err);
+      }
+    }
+    
+    fetchKategori();
+  }, [initialData]);
 
   useEffect(() => {
     if (initialData) {
@@ -90,11 +102,16 @@ export default function LayananForm({ initialData, onSubmit, submitting, mode })
             onChange={handleChange}
             className="form-input"
           >
-            {KATEGORI_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
+            {/* FIX: Lakukan mapping dari state kategoriOptions dan beri fallback saat loading */}
+            {kategoriOptions.length === 0 ? (
+              <option value="">Memuat kategori...</option>
+            ) : (
+              kategoriOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))
+            )}
           </select>
 
           <label className="form-label">Deskripsi</label>

@@ -50,6 +50,21 @@ export async function getAllLayanan() {
   return json.data.map(mapApiItem)
 }
 
+export async function getKategoriLayanan() {
+  const res = await fetch(`${URL}/layanan?ambil_kategori=true`, {
+    'method': 'GET',
+    'headers': {
+      'Content-Type': 'application/json'
+    }
+  })
+
+  const body = await parseJsonResponse(res);
+
+  const data = body.data;
+
+  return data;
+}
+
 export async function getLayananById(id) {
   const res = await fetch(`${URL}/layanan/${id}`, {
     method: 'GET',
