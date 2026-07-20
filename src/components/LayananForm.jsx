@@ -6,8 +6,9 @@ const emptyForm = {
   kategori: '',
   deskripsi: '',
   harga: '',
+  tipe_layanan: 'tindakan',
   durasi: '',
-  status: 'aktif',
+  transport: false,
   gambar: null,
 };
 
@@ -64,7 +65,7 @@ export default function LayananForm({ initialData, onSubmit, submitting, mode })
     if (!form.nama.trim()) newErrors.nama = 'Nama layanan wajib diisi';
     if (!form.deskripsi.trim()) newErrors.deskripsi = 'Deskripsi wajib diisi';
     if (!form.harga || Number(form.harga) <= 0) newErrors.harga = 'Harga harus lebih dari 0';
-    if (!form.durasi || Number(form.durasi) <= 0) newErrors.durasi = 'Durasi harus lebih dari 0';
+    if (form.tipe_layanan === 'durasi' && (!form.durasi || Number(form.durasi) <= 0)) newErrors.durasi = 'Durasi harus lebih dari 0';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -75,7 +76,7 @@ export default function LayananForm({ initialData, onSubmit, submitting, mode })
     onSubmit({
       ...form,
       harga: Number(form.harga),
-      durasi: Number(form.durasi),
+      durasi: form.tipe_layanan === 'durasi' ? Number(form.durasi) : '',
     });
   }
 
@@ -113,6 +114,17 @@ export default function LayananForm({ initialData, onSubmit, submitting, mode })
             )}
           </select>
 
+          <label className="form-label">Tipe Layanan</label>
+          <select
+            name="tipe_layanan"
+            value={form.tipe_layanan}
+            onChange={handleChange}
+            className="form-input"
+          >
+            <option value="tindakan">Tindakan</option>
+            <option value="durasi">Berdasarkan Durasi</option>
+          </select>
+
           <label className="form-label">Deskripsi</label>
           <textarea
             name="deskripsi"
@@ -138,46 +150,48 @@ export default function LayananForm({ initialData, onSubmit, submitting, mode })
               />
               {errors.harga && <span className="field-error">{errors.harga}</span>}
             </div>
-            <div>
-              <label className="form-label">Durasi (menit)</label>
-              <input
-                type="number"
-                name="durasi"
-                value={form.durasi}
-                onChange={handleChange}
-                className="form-input"
-                placeholder="60"
-                min="0"
-              />
-              {errors.durasi && <span className="field-error">{errors.durasi}</span>}
-            </div>
+            {form.tipe_layanan === 'durasi' && (
+              <div>
+                <label className="form-label">Durasi (menit)</label>
+                <input
+                  type="number"
+                  name="durasi"
+                  value={form.durasi}
+                  onChange={handleChange}
+                  className="form-input"
+                  placeholder="60"
+                  min="0"
+                />
+                {errors.durasi && <span className="field-error">{errors.durasi}</span>}
+              </div>
+            )}
           </div>
 
-          <label className="form-label">Status</label>
+          <label className="form-label">Include Transport</label>
           <div className="mt-1 flex gap-2.5">
             <button
               type="button"
               className={
                 'flex-1 rounded-lg border px-3 py-2.5 text-[13px] font-semibold ' +
-                (form.status === 'aktif'
+                (form.transport === true
                   ? 'border-primary bg-primary-light text-primary-dark'
                   : 'border-slate-200 bg-white text-slate-500')
               }
-              onClick={() => setForm((prev) => ({ ...prev, status: 'aktif' }))}
+              onClick={() => setForm((prev) => ({ ...prev, transport: true }))}
             >
-              Aktif
+              Iya
             </button>
             <button
               type="button"
               className={
                 'flex-1 rounded-lg border px-3 py-2.5 text-[13px] font-semibold ' +
-                (form.status === 'nonaktif'
+                (form.transport === false
                   ? 'border-danger bg-danger-bg text-danger'
                   : 'border-slate-200 bg-white text-slate-500')
               }
-              onClick={() => setForm((prev) => ({ ...prev, status: 'nonaktif' }))}
+              onClick={() => setForm((prev) => ({ ...prev, transport: false }))}
             >
-              Nonaktif
+              Tidak
             </button>
           </div>
         </div>

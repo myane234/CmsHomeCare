@@ -1,93 +1,117 @@
-// Promo API client
-// Uses the endpoint URLs listed in the project docs.
-// Notes:
-// - These functions use window.fetch.
-// - Adjust API base/headers if your backend requires auth.
+import { URL } from '../utils/getUrl.js';
+import { getAuthHeaders } from '../utils/auth.js';
 
-const API_BASE = 'https://citra.faaruq.com';
-
-function buildHeaders() {
-  return {
-    'Content-Type': 'application/json',
-  };
-}
-
-function handleResponse(res) {
-  if (!res.ok) {
-    return res.text().then((t) => {
-      const msg = t || `Request failed with status ${res.status}`;
-      throw new Error(msg);
-    });
-  }
-  // Some APIs return empty body for DELETE
-  return res.text().then((t) => {
-    if (!t) return null;
-    try {
-      return JSON.parse(t);
-    } catch {
-      return t;
+// Helper untuk membuat FormData dari payload
+function objectToFormData(obj) {
+  const formData = new FormData();
+  Object.keys(obj).forEach((key) => {
+    const value = obj[key];
+    
+    // Handle array (seperti layanan_ids)
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => {
+        formData.append(`${key}[${index}]`, item);
+      });
+    } 
+    // Handle null/undefined
+    else if (value !== null && value !== undefined) {
+      formData.append(key, value);
     }
   });
+  return formData;
+}
+
+// Header untuk JSON (GET/DELETE)
+function buildHeaders() {
+  return getAuthHeaders({ 'Content-Type': 'application/json', 'Accept': 'application/json' });
+}
+
+async function parseJsonResponse(response) {
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    const message = body?.message ?? `Error ${response.status}: Terjadi kesalahan`;
+    throw new Error(message);
+  }
+  return await response.json().catch(() => null);
+}
+
+function extractData(body) {
+  return (body && typeof body === 'object' && body.data !== undefined) ? body.data : body;
 }
 
 function normalizePromo(raw) {
-  // Expected fields from task:
-  // - kode_promo
-  // - potongan_harga (%persen)
-  // - tanggal_berakhir (YY:M:D or string)
-  // - status_promo ('Tidak Aktif'/'Aktif')
-  // Plus id_promo if backend includes it.
-  // This function is defensive and returns raw as-is if unknown.
-  return raw;
+  if (!raw || typeof raw !== 'object') return raw;
+
+  const layanan = Array.isArray(raw.layanans) ? raw.layanans : [];
+  const layananIds = Array.isArray(raw.layanan_ids)
+    ? raw.layanan_ids
+    : layanan.map((item) => item.id_layanan ?? item.id ?? item.value);
+
+  return {
+    ...raw,
+    id: raw.id ?? raw.id_promo ?? raw.idPromo,
+    nama_paket: raw.nama_paket ?? raw.nama ?? raw.kode_promo ?? '',
+    deskripsi: raw.deskripsi ?? raw.deskripsi_layanan ?? raw.deskripsiLayanan ?? '',
+    diskon_persen: raw.diskon_persen ?? raw.potongan_harga ?? raw.potonganHarga ?? 0,
+    status_promo: raw.status_promo ?? raw.status ?? 'Tidak Aktif',
+    gambar_promo: raw.gambar_promo ?? null, // Memastikan field gambar ada
+    layanan_ids: layananIds.filter(Boolean),
+    layanans: layanan,
+  };
 }
 
 export async function getAllPromo() {
-  const res = await fetch(`${API_BASE}/api/promo`, {
-    method: 'GET',
-    headers: buildHeaders(),
-  });
-  const data = await handleResponse(res);
-  if (Array.isArray(data)) return data.map(normalizePromo);
-  // if API wraps results
-  if (data && Array.isArray(data.data)) return data.data.map(normalizePromo);
-  return data ? [normalizePromo(data)] : [];
-}
-
-export async function createPromo(payload) {
-  const res = await fetch(`${API_BASE}/api/promo`, {
-    method: 'POST',
-    headers: buildHeaders(),
-    body: JSON.stringify(payload),
-  });
-  const data = await handleResponse(res);
-  return normalizePromo(data);
+  const res = await fetch(`${URL}/promo/`, { method: 'GET', headers: buildHeaders() });
+  const json = await parseJsonResponse(res);
+  const data = extractData(json);
+  return Array.isArray(data) ? data.map(normalizePromo) : (data ? [normalizePromo(data)] : []);
 }
 
 export async function getPromoById(id_promo) {
-  const res = await fetch(`${API_BASE}/api/promo/${encodeURIComponent(id_promo)}`, {
-    method: 'GET',
-    headers: buildHeaders(),
+  const res = await fetch(`${URL}/promo/${encodeURIComponent(id_promo)}`, { method: 'GET', headers: buildHeaders() });
+  const json = await parseJsonResponse(res);
+  return normalizePromo(extractData(json));
+}
+
+export async function createPromo(payload) {
+  const formData = objectToFormData(payload);
+  
+  const res = await fetch(`${URL}/promo/`, {
+    method: 'POST',
+    headers: getAuthHeaders({ 'Accept': 'application/json' }), // Tanpa Content-Type (auto-set oleh browser)
+    body: formData,
   });
-  const data = await handleResponse(res);
-  return normalizePromo(data);
+
+  const json = await parseJsonResponse(res);
+  return normalizePromo(extractData(json));
 }
 
 export async function updatePromo(id_promo, payload) {
-  const res = await fetch(`${API_BASE}/api/promo/${encodeURIComponent(id_promo)}`, {
-    method: 'PUT',
-    headers: buildHeaders(),
-    body: JSON.stringify(payload),
+  const formData = objectToFormData(payload);
+  // Tambahkan _method: PUT agar Laravel mengenali request sebagai PUT meski dikirim via POST
+  formData.append('_method', 'PUT');
+
+  const res = await fetch(`${URL}/promo/${encodeURIComponent(id_promo)}`, {
+    method: 'POST', // Gunakan POST untuk FormData file
+    headers: getAuthHeaders({ 'Accept': 'application/json' }),
+    body: formData,
   });
-  const data = await handleResponse(res);
-  return normalizePromo(data);
+
+  const json = await parseJsonResponse(res);
+  return normalizePromo(extractData(json));
 }
 
 export async function deletePromo(id_promo) {
-  const res = await fetch(`${API_BASE}/api/promo/${encodeURIComponent(id_promo)}`, {
+  const res = await fetch(`${URL}/promo/${encodeURIComponent(id_promo)}`, {
     method: 'DELETE',
     headers: buildHeaders(),
   });
-  await handleResponse(res);
+  await parseJsonResponse(res);
   return true;
 }
-
+export const getImageUrl = (path) => {
+  if (!path) return null;
+  // Jika path sudah mengandung http, biarkan (karena mungkin sudah full URL)
+  if (path.startsWith('http')) return path;
+  return `${BASE_URL}${path}`;
+};

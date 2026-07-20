@@ -1,26 +1,49 @@
-// Simple mock auth for the admin CMS.
-// In production, replace this with a real API call to your backend.
+import { URL } from './getUrl.js';
 
 const AUTH_KEY = 'cmsHomeCare_auth';
 
-// Hardcoded demo admin credentials
-const ADMIN_EMAIL = 'admin@smarthomecare.com';
-const ADMIN_PASSWORD = 'admin123';
+export async function login(email, password) {
+  try {
+    const res = await fetch(`${URL}/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const body = await res.json();
 
-export function login(email, password) {
-  if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-    const session = {
-      email,
-      name: 'Admin SmartHomeCare',
-      loggedInAt: new Date().toISOString(),
-    };
-    localStorage.setItem(AUTH_KEY, JSON.stringify(session));
-    return { success: true };
+    if (res.ok && body.success) {
+      const session = {
+        token: body.data.token,
+        email,
+        name: body.data.nama || 'Admin',
+        roles: body.data.roles,
+        loggedInAt: new Date().toISOString(),
+      };
+      localStorage.setItem(AUTH_KEY, JSON.stringify(session));
+      return { success: true };
+    }
+    
+    return { success: false, message: body.message || 'Email atau password salah' };
+  } catch (error) {
+    return { success: false, message: 'Gagal menghubungi server' };
   }
-  return { success: false, message: 'Email atau password salah' };
 }
 
-export function logout() {
+export async function logout() {
+  const session = getSession();
+  if (session?.token) {
+    try {
+      await fetch(`${URL}/admin/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.token}`
+        },
+      });
+    } catch (e) {
+      // Ignore error on logout
+    }
+  }
   localStorage.removeItem(AUTH_KEY);
 }
 
@@ -31,4 +54,13 @@ export function getSession() {
 
 export function isAuthenticated() {
   return !!getSession();
+}
+
+export function getAuthHeaders(additionalHeaders = {}) {
+  const session = getSession();
+  const headers = { ...additionalHeaders };
+  if (session?.token) {
+    headers['Authorization'] = `Bearer ${session.token}`;
+  }
+  return headers;
 }

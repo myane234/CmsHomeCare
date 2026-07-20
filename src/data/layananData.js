@@ -1,4 +1,5 @@
-import { URL } from '../utils/getUrl.js'
+import { URL } from '../utils/getUrl.js';
+import { getAuthHeaders } from '../utils/auth.js';
 
 function resolveImageUrl(value) {
   if (!value || typeof value !== 'string') return ''
@@ -25,8 +26,9 @@ function mapApiItem(item) {
     nama: item.nama_layanan ?? item.nama ?? '',
     kategori: item.kategori_layanan ?? item.kategori ?? '',
     harga: Number(item.harga ?? 0),
-    durasi: item.durasi_menit ?? item.durasi ?? 0,
-    status: item.status ?? 'aktif',
+    tipe_layanan: item.tipe_layanan ?? 'tindakan',
+    durasi: item.durasi_menit ?? item.durasi ?? '',
+    transport: item.include_transport ?? false,
     deskripsi: item.deskripsi_layanan ?? '',
     gambar: resolveImageUrl(item.foto_layanan ?? item.gambar ?? ''),
   }
@@ -37,8 +39,13 @@ function toFormData(item) {
   fd.append('nama_layanan', item.nama ?? '');
   fd.append('kategori_layanan', item.kategori ?? '');
   fd.append('harga', item.harga ?? 0);
-  fd.append('durasi_menit', item.durasi ?? 0);
-  fd.append('status', item.status ?? 'aktif');
+  fd.append('tipe_layanan', item.tipe_layanan ?? 'tindakan');
+  if (item.tipe_layanan === 'durasi') {
+    fd.append('durasi_menit', item.durasi ?? 0);
+  } else {
+    fd.append('durasi_menit', '');
+  }
+  fd.append('include_transport', item.transport ? 1 : 0);
   fd.append('deskripsi_layanan', item.deskripsi ?? '');
   if (item.gambar instanceof File) {
     fd.append('foto_layanan', item.gambar);
@@ -106,6 +113,7 @@ export async function getLayananById(id) {
 export async function createLayanan(payload) {
   const res = await fetch(`${URL}/layanan/`, {
     method: 'POST',
+    headers: getAuthHeaders(),
     body: toFormData(payload),
     // Tidak set Content-Type agar browser auto-set multipart boundary
   })
@@ -120,6 +128,7 @@ export async function updateLayanan(id, payload) {
   fd.append('_method', 'PUT'); // Laravel method spoofing untuk multipart
   const res = await fetch(`${URL}/layanan/${id}`, {
     method: 'POST',
+    headers: getAuthHeaders(),
     body: fd,
     // Tidak set Content-Type agar browser auto-set multipart boundary
   })
@@ -132,9 +141,9 @@ export async function updateLayanan(id, payload) {
 export async function deleteLayanan(id) {
   const res = await fetch(`${URL}/layanan/${id}`, {
     method: 'DELETE',
-    headers: {
+    headers: getAuthHeaders({
       'Content-Type': 'application/json',
-    },
+    }),
   })
 
   await parseJsonResponse(res)

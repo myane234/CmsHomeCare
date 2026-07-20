@@ -12,22 +12,21 @@ export default function PromoTambah() {
     try {
       await createPromo(data);
       navigate('/promo');
+    } catch (e) {
+      alert(e.message);
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="promo-form-page">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Tambah Promo</h1>
-          <p className="page-subtitle">Tambahkan promo HomeCare baru</p>
-        </div>
+    <div>
+      <div className="mb-5">
+        <h1 className="page-title">Tambah Promo</h1>
+        <p className="page-subtitle">Buat paket promo yang berisi beberapa layanan</p>
       </div>
 
-      <PromoForm mode="tambah" onSubmit={handleSubmit} submitting={submitting} />
+      <PromoForm onSubmit={handleSubmit} submitting={submitting} />
     </div>
   );
 }
-

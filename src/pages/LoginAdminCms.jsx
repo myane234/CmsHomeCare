@@ -15,7 +15,7 @@ export default function LoginAdminCms() {
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError('');
 
@@ -25,15 +25,13 @@ export default function LoginAdminCms() {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      const result = login(form.email, form.password);
-      setLoading(false);
-      if (result.success) {
-        navigate('/dashboard', { replace: true });
-      } else {
-        setError(result.message);
-      }
-    }, 400);
+    const result = await login(form.email, form.password);
+    setLoading(false);
+    if (result.success) {
+      navigate('/dashboard', { replace: true });
+    } else {
+      setError(result.message);
+    }
   }
 
   return (

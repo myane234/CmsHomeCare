@@ -70,8 +70,9 @@ export default function PageLayanan() {
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nama Layanan</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Kategori</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Harga</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Tipe Layanan</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Durasi</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Status</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Transport</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-slate-500">Aksi</th>
                 </tr>
               </thead>
@@ -96,11 +97,14 @@ export default function PageLayanan() {
                     <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
                       Rp {Number(item.harga).toLocaleString('id-ID')}
                     </td>
-                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.durasi} menit</td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm capitalize">
+                      {item.tipe_layanan || 'Tindakan'}
+                    </td>
                     <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
-                      <span className={`badge badge-${item.status}`}>
-                        {item.status === 'aktif' ? 'Aktif' : 'Nonaktif'}
-                      </span>
+                      {item.tipe_layanan === 'durasi' ? `${item.durasi} menit` : '-'}
+                    </td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
+                      {item.transport ? 'Ya' : 'Tidak'}
                     </td>
                     <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
                       <div className="flex justify-end gap-2">

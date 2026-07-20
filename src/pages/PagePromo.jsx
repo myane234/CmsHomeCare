@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { deletePromo, getAllPromo } from '../data/PromoEndpoint';
-import './PagePromo.css';
+import { getImageUrl } from '../data/imageHelper.js';
 
 export default function PagePromo() {
   const [promo, setPromo] = useState([]);
@@ -15,141 +15,158 @@ export default function PagePromo() {
     getAllPromo()
       .then((data) => {
         setPromo(data);
-        setLoading(false);
       })
-      .catch(() => {
-        setPromo([]);
-        setLoading(false);
-      });
+      .finally(() => setLoading(false));
   }
 
   useEffect(() => {
     loadData();
   }, []);
 
+  // Logika Filter
   const filtered = promo.filter((item) => {
-    const kode = item.kode_promo ?? item.kodePromo ?? item.kode ?? '';
-    const persen = item.potongan_harga ?? item.potonganHarga ?? '';
-    return String(kode)
-      .toLowerCase()
-      .includes(search.toLowerCase()) || String(persen).toLowerCase().includes(search.toLowerCase());
+    const query = search.toLowerCase();
+    const nama = String(item.nama_paket ?? '').toLowerCase();
+    const layanan = String(
+      Array.isArray(item.layanans)
+        ? item.layanans.map((l) => l.nama_layanan ?? l.nama ?? '').join(' ')
+        : ''
+    ).toLowerCase();
+    return nama.includes(query) || layanan.includes(query);
   });
 
+  // Logika Hapus
   async function confirmDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const id = deleteTarget.id_promo ?? deleteTarget.idPromo ?? deleteTarget.id;
-      await deletePromo(id);
-      setDeleteTarget(null);
+      await deletePromo(deleteTarget.id ?? deleteTarget.id_promo);
       loadData();
+      setDeleteTarget(null);
+    } catch (error) {
+      alert(error.message);
     } finally {
       setDeleting(false);
     }
   }
 
-  function getId(item) {
-    return item.id_promo ?? item.idPromo ?? item.id;
-  }
-
   return (
-    <div className="promo-page">
-      <div className="page-header">
+    <div>
+      {/* Header */}
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="page-title">Promo</h1>
-          <p className="page-subtitle">Kelola semua promo HomeCare di sini</p>
+          <p className="page-subtitle">Kelola semua paket promo HomeCare di sini</p>
         </div>
-        <Link to="/promo/tambah" className="btn btn-primary">
+        <Link to="/promo/tambah" className="btn-primary">
           + Tambah Promo
         </Link>
       </div>
 
-      <div className="promo-toolbar">
+      {/* Search */}
+      <div className="mb-4">
         <input
           type="text"
-          placeholder="Cari kode promo atau potongan..."
+          placeholder="Cari nama paket atau layanan..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="form-input promo-search"
+          className="form-input max-w-full sm:max-w-[340px]"
         />
       </div>
 
-      <div className="promo-table-wrapper">
+      {/* Table Card */}
+      <div className="card overflow-hidden">
         {loading ? (
-          <p className="empty-state">Memuat data...</p>
+          <p className="p-10 text-center text-sm text-slate-500">Memuat data...</p>
         ) : filtered.length === 0 ? (
-          <p className="empty-state">Tidak ada promo ditemukan.</p>
+          <p className="p-10 text-center text-sm text-slate-500">Tidak ada promo ditemukan.</p>
         ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Kode Promo</th>
-                <th>Potongan Harga</th>
-                <th>Tanggal Berakhir</th>
-                <th>Status</th>
-                <th style={{ textAlign: 'right' }}>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((item) => {
-                const kode = item.kode_promo ?? item.kodePromo ?? item.kode ?? '-';
-                const persenRaw = item.potongan_harga ?? item.potonganHarga ?? '-';
-                const persenFormatted = persenRaw !== '-' ? `${Number(persenRaw)}%` : '-';
-                const tanggalRaw = item.tanggal_berakhir ?? item.tanggalBerakhir ?? '-';
-                const tanggalFormatted = tanggalRaw !== '-' ? String(tanggalRaw).split('T')[0] : '-';
-                const status = item.status_promo ?? item.statusPromo ?? '-';
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px] border-collapse">
+              <thead>
+                <tr>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Gambar</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nama Paket</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Diskon</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Layanan</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Status</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-slate-500">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((item) => {
+                  const promoId = item.id_promo ?? item.id;
+                  const layananLabel = Array.isArray(item.layanans)
+                    ? item.layanans.map((l) => l.nama_layanan ?? l.nama ?? l.id).join(', ')
+                    : '-';
 
-                const statusBadge = String(status).toLowerCase().includes('aktif') ? 'aktif' : 'nonaktif';
-
-                return (
-                  <tr key={String(getId(item)) || kode}>
-                    <td>{kode}</td>
-                    <td>{persenFormatted}</td>
-                    <td>{tanggalFormatted}</td>
-                    <td>
-                      <span className={`badge badge-${statusBadge}`}>{status}</span>
-                    </td>
-                    <td>
-                      <div className="table-actions">
-                        <Link
-                          to={`/promo/${getId(item)}/edit`}
-                          className="btn btn-outline btn-sm"
-                        >
-                          Edit
-                        </Link>
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => setDeleteTarget(item)}
-                        >
-                          Hapus
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                  return (
+                    <tr key={promoId} className="hover:bg-slate-50">
+                      {/* Kolom Gambar */}
+                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
+                        {item.gambar_promo ? (
+                            <img
+                              src={getImageUrl(item.gambar_promo)}
+                              alt={item.nama_paket}
+                              className="h-14 w-20 rounded-lg border border-slate-200 object-cover"
+                            />
+                        ) : (
+                          <div className="flex h-14 w-20 items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 text-[11px] text-slate-400">
+                            No img
+                          </div>
+                        )}
+                      </td>
+                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm font-medium">{item.nama_paket ?? '-'}</td>
+                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.diskon_persen ?? item.potongan_harga ?? '-'}%</td>
+                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{layananLabel}</td>
+                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${item.status_promo === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                           {item.status_promo ?? '-'}
+                        </span>
+                      </td>
+                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
+                        <div className="flex justify-end gap-2">
+                          <Link to={`/promo/${promoId}/edit`} className="btn-outline btn-sm">Edit</Link>
+                          <button
+                            className="btn-danger btn-sm"
+                            onClick={() => setDeleteTarget(item)}
+                          >
+                            Hapus
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
+      {/* Modal Delete */}
       {deleteTarget && (
-        <div className="modal-overlay" onClick={() => !deleting && setDeleteTarget(null)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3>Hapus Promo?</h3>
-            <p>
-              Yakin ingin menghapus <strong>{deleteTarget.kode_promo ?? deleteTarget.kodePromo ?? deleteTarget.kode ?? '-'}</strong>? Tindakan ini
-              tidak dapat dibatalkan.
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-5"
+          onClick={() => !deleting && setDeleteTarget(null)}
+        >
+          <div
+            className="w-full max-w-[380px] rounded-card bg-white p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-2.5 text-lg font-bold">Hapus Promo?</h3>
+            <p className="mb-5 text-sm text-slate-500">
+              Yakin ingin menghapus <strong>{deleteTarget.nama_paket ?? '-'}</strong>? Tindakan ini tidak dapat dibatalkan.
             </p>
-            <div className="modal-actions">
+            <div className="flex justify-end gap-2.5">
               <button
-                className="btn btn-outline"
+                className="btn-outline"
                 onClick={() => setDeleteTarget(null)}
                 disabled={deleting}
               >
                 Batal
               </button>
-              <button className="btn btn-danger" onClick={confirmDelete} disabled={deleting}>
+              <button className="btn-danger" onClick={confirmDelete} disabled={deleting}>
                 {deleting ? 'Menghapus...' : 'Ya, Hapus'}
               </button>
             </div>
@@ -159,4 +176,3 @@ export default function PagePromo() {
     </div>
   );
 }
-

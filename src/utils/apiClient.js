@@ -3,7 +3,7 @@
 // (e.g. http://localhost:8000 for `php artisan serve`, or http://localhost
 // if you're using Laravel Herd/Valet on port 80).
 
-export const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://citra.faaruq.com';
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 async function handleResponse(res) {
   const isJson = res.headers.get('content-type')?.includes('application/json');
