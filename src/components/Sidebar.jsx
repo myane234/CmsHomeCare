@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom';
 import logo from '../assets/logo.png';
+import { FaStethoscope, FaGift, FaRegFileAlt, FaChartBar } from 'react-icons/fa';
 
 const menuItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { to: '/layanan', label: 'Layanan', icon: '🩺' },
-  { to: '/promo', label: 'Promo', icon: '🏷️' },
-  { to: '/artikel', label: 'Artikel', icon: '📰' },
+  { to: '/dashboard', label: 'Dashboard', icon: <FaChartBar /> },
+  { to: '/layanan', label: 'Layanan', icon: <FaStethoscope /> },
+  { to: '/promo', label: 'Promo', icon: <FaGift /> },
+  { to: '/artikel', label: 'Artikel', icon: <FaRegFileAlt /> },
 ];
 
 export default function Sidebar({ open, onClose }) {
