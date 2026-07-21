@@ -59,6 +59,7 @@ export default function PromoForm({ initialData, onSubmit, submitting, mode }) {
         tanggal = `20${yy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
       }
 
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({
         ...emptyForm,
         nama_paket: initialData.nama_paket ?? initialData.nama ?? initialData.kode_promo ?? '',
@@ -312,13 +313,29 @@ export default function PromoForm({ initialData, onSubmit, submitting, mode }) {
         </div>
       </div>
 
-      <div className="mt-7 flex flex-col-reverse justify-end gap-2.5 border-t border-slate-200 pt-5 sm:flex-row">
-        <a href="/promo" className="btn-outline text-center">
-          Batal
-        </a>
-        <button type="submit" className="btn-primary" disabled={submitting}>
-          {submitting ? 'Menyimpan...' : mode === 'edit' ? 'Simpan Perubahan' : 'Tambah Promo'}
-        </button>
+      <div className="mt-7 flex flex-col-reverse justify-between gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-center">
+        <div>
+          {mode === 'edit' && initialData?.updated_at && (
+            <span className="text-xs text-slate-400">
+              Terakhir diperbarui:{' '}
+              {new Date(initialData.updated_at).toLocaleString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              }).replace(/\./g, ':')}
+            </span>
+          )}
+        </div>
+        <div className="flex flex-col-reverse gap-2.5 sm:flex-row">
+          <a href="/promo" className="btn-outline text-center">
+            Batal
+          </a>
+          <button type="submit" className="btn-primary" disabled={submitting}>
+            {submitting ? 'Menyimpan...' : mode === 'edit' ? 'Simpan Perubahan' : 'Tambah Promo'}
+          </button>
+        </div>
       </div>
     </form>
   );

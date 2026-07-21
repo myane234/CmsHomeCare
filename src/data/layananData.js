@@ -31,6 +31,8 @@ function mapApiItem(item) {
     transport: item.include_transport ?? false,
     deskripsi: item.deskripsi_layanan ?? '',
     gambar: resolveImageUrl(item.foto_layanan ?? item.gambar ?? ''),
+    created_at: item.created_at ?? null,
+    updated_at: item.updated_at ?? null,
   }
 }
 
