@@ -4,25 +4,25 @@ import { getSession } from '../../utils/auth';
 import { FaUserMd, FaUserCheck, FaClock, FaTimesCircle } from 'react-icons/fa';
 
 const nakesData = [
-  { id: 1, nama: 'Dr. Anisa Rahma', jenis: 'Perawat', nomor_str: 'STR-2024001', lulusan: 'Poltekkes Kemenkes Jakarta', tanggal: '2024-01-15', status: 'Aktif' },
-  { id: 2, nama: 'Siti Nurhaliza', jenis: 'Bidan', nomor_str: 'STR-2024002', lulusan: 'Akademi Kebidanan Citra', tanggal: '2024-02-10', status: 'Aktif' },
-  { id: 3, nama: 'Rizki Pratama', jenis: 'Fisioterapis', nomor_str: 'STR-2024003', lulusan: 'Universitas Brawijaya', tanggal: '2024-03-05', status: 'Pending' },
-  { id: 4, nama: 'Dewi Sartika', jenis: 'Perawat', nomor_str: 'STR-2024004', lulusan: 'STIKES Harapan Bangsa', tanggal: '2024-04-18', status: 'Ditolak' },
-  { id: 5, nama: 'Muhammad Farid', jenis: 'Bidan', nomor_str: 'STR-2024005', lulusan: 'Poltekkes Kemenkes Surabaya', tanggal: '2024-05-22', status: 'Aktif' },
+  { id: 1, nama: 'Dr. Anisa Rahma', jenis: 'Pergantian Alat Medis', nomor_str: 'STR-2024001', lulusan: 'Poltekkes Kemenkes Jakarta', tanggal: '2026-01-15', status: 'Selesai' },
+  { id: 2, nama: 'Siti Nurhaliza', jenis: 'Fisioterapi', nomor_str: 'STR-2024002', lulusan: 'Akademi Kebidanan Citra', tanggal: '2026-02-10', status: 'Pelatihan' },
+  { id: 3, nama: 'Rizki Pratama', jenis: 'Fisioterapi', nomor_str: 'STR-2024003', lulusan: 'Universitas Brawijaya', tanggal: '2026-03-05', status: 'Pending' },
+  { id: 4, nama: 'Dewi Sartika', jenis: 'Baby Nurse', nomor_str: 'STR-2024004', lulusan: 'STIKES Harapan Bangsa', tanggal: '2026-04-18', status: 'Selesai' },
+  { id: 5, nama: 'Muhammad Farid', jenis: 'Baby Nurse', nomor_str: 'STR-2024005', lulusan: 'Poltekkes Kemenkes Surabaya', tanggal: '2026-05-22', status: 'Pelatihan' },
 ];
 
 export default function AdminDashboard() {
   const session = getSession();
   const totalNakes = nakesData.length;
-  const aktifCount = nakesData.filter((item) => item.status === 'Aktif').length;
+  const selesaiCount = nakesData.filter((item) => item.status === 'Selesai').length;
   const pendingCount = nakesData.filter((item) => item.status === 'Pending').length;
-  const rejectedCount = nakesData.filter((item) => item.status === 'Ditolak').length;
+  const pelatihanCount = nakesData.filter((item) => item.status === 'Pelatihan').length;
 
   const summaryCards = [
     { label: 'Total Nakes', value: totalNakes, icon: <FaUserMd />, bg: 'bg-blue-100', color: 'text-blue-600' },
-    { label: 'Nakes Aktif', value: aktifCount, icon: <FaUserCheck />, bg: 'bg-emerald-100', color: 'text-emerald-600' },
+    { label: 'Nakes Selesai', value: selesaiCount, icon: <FaUserCheck />, bg: 'bg-emerald-100', color: 'text-emerald-600' },
     { label: 'Request Pending', value: pendingCount, icon: <FaClock />, bg: 'bg-amber-100', color: 'text-amber-600' },
-    { label: 'Request Ditolak', value: rejectedCount, icon: <FaTimesCircle />, bg: 'bg-rose-100', color: 'text-rose-600' },
+    { label: 'Sedang Pelatihan', value: pelatihanCount, icon: <FaTimesCircle />, bg: 'bg-blue-100', color: 'text-blue-700' },
   ];
 
   return (
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
                   <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.jenis}</td>
                   <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.tanggal}</td>
                   <td className="border-b border-slate-200 px-4 py-3 text-sm">
-                    <span className={`badge ${item.status === 'Aktif' ? 'badge-aktif' : item.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>
+                    <span className={`badge ${item.status === 'Selesai' ? 'badge-aktif' : item.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
                       {item.status}
                     </span>
                   </td>

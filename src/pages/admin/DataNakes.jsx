@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { FaSearch, FaUserMd } from 'react-icons/fa';
 
 const nakesData = [
-  { id: 1, foto: '👩‍⚕️', nama: 'Dr. Anisa Rahma', jenis: 'Perawat', nomorStr: 'STR-2024001', lulusan: 'Poltekkes Kemenkes Jakarta', status: 'Aktif' },
-  { id: 2, foto: '👩', nama: 'Siti Nurhaliza', jenis: 'Bidan', nomorStr: 'STR-2024002', lulusan: 'Akademi Kebidanan Citra', status: 'Aktif' },
-  { id: 3, foto: '🧑‍⚕️', nama: 'Rizki Pratama', jenis: 'Fisioterapis', nomorStr: 'STR-2024003', lulusan: 'Universitas Brawijaya', status: 'Pending' },
-  { id: 4, foto: '👩‍🔬', nama: 'Dewi Sartika', jenis: 'Perawat', nomorStr: 'STR-2024004', lulusan: 'STIKES Harapan Bangsa', status: 'Ditolak' },
-  { id: 5, foto: '🧑', nama: 'Muhammad Farid', jenis: 'Bidan', nomorStr: 'STR-2024005', lulusan: 'Poltekkes Kemenkes Surabaya', status: 'Aktif' },
+  { id: 1, foto: '/nakesgambar.jpg', nama: 'Dr. Anisa Rahma', jenis: 'Pergantian Alat Medis', nomorStr: 'STR-2024001', lulusan: 'Poltekkes Kemenkes Jakarta', status: 'Selesai', dokumenPdf: '/Ijazah-Jokowi.jpg' },
+  { id: 2, foto: '/nakesgambar.jpg', nama: 'Siti Nurhaliza', jenis: 'Fisioterapi', nomorStr: 'STR-2024002', lulusan: 'Akademi Kebidanan Citra', status: 'Pelatihan', dokumenPdf: '/Ijazah-Jokowi.jpg' },
+  { id: 3, foto: '/nakesgambar.jpg', nama: 'Rizki Pratama', jenis: 'Fisioterapi', nomorStr: 'STR-2024003', lulusan: 'Universitas Brawijaya', status: 'Pending', dokumenPdf: '/Ijazah-Jokowi.jpg' },
+  { id: 4, foto: '/nakesgambar.jpg', nama: 'Dewi Sartika', jenis: 'Baby Nurse', nomorStr: 'STR-2024004', lulusan: 'STIKES Harapan Bangsa', status: 'Selesai', dokumenPdf: '/Ijazah-Jokowi.jpg' },
+  { id: 5, foto: '/nakesgambar.jpg', nama: 'Muhammad Farid', jenis: 'Baby Nurse', nomorStr: 'STR-2024005', lulusan: 'Poltekkes Kemenkes Surabaya', status: 'Pelatihan', dokumenPdf: '/Ijazah-Jokowi.jpg' },
 ];
 
-const filterOptions = ['Semua', 'Perawat', 'Bidan', 'Fisioterapis'];
+const filterOptions = ['Semua', 'Pending', 'Pelatihan', 'Selesai'];
 
 export default function DataNakes() {
   const [search, setSearch] = useState('');
@@ -17,7 +17,7 @@ export default function DataNakes() {
 
   const filteredNakes = nakesData.filter((item) => {
     const matchesSearch = `${item.nama} ${item.jenis} ${item.nomorStr}`.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = filter === 'Semua' || item.jenis === filter;
+    const matchesFilter = filter === 'Semua' || item.status === filter;
     return matchesSearch && matchesFilter;
   });
 
@@ -46,11 +46,10 @@ export default function DataNakes() {
               key={option}
               type="button"
               onClick={() => setFilter(option)}
-              className={`rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
-                filter === option
-                  ? 'bg-primary text-white'
-                  : 'border border-slate-200 bg-white text-slate-600 hover:border-primary hover:text-primary'
-              }`}
+              className={`rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${filter === option
+                ? 'bg-primary text-white'
+                : 'border border-slate-200 bg-white text-slate-600 hover:border-primary hover:text-primary'
+                }`}
             >
               {option}
             </button>
@@ -83,8 +82,8 @@ export default function DataNakes() {
               {filteredNakes.map((item) => (
                 <tr key={item.id} className="hover:bg-slate-50">
                   <td className="border-b border-slate-200 px-4 py-3 text-sm">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-light text-lg">
-                      {item.foto}
+                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-lg">
+                      <img src={item.foto} alt={item.nama} className="h-full w-full object-cover" />
                     </div>
                   </td>
                   <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.nama}</td>
@@ -92,14 +91,14 @@ export default function DataNakes() {
                   <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.nomorStr}</td>
                   <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.lulusan}</td>
                   <td className="border-b border-slate-200 px-4 py-3 text-sm">
-                    <span className={`badge ${item.status === 'Aktif' ? 'badge-aktif' : item.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>
+                    <span className={`badge ${item.status === 'Selesai' ? 'badge-aktif' : item.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
                       {item.status}
                     </span>
                   </td>
                   <td className="border-b border-slate-200 px-4 py-3 text-sm">
-                    <button type="button" className="btn-outline btn-sm">
-                      Lihat
-                    </button>
+                    <a href={item.dokumenPdf} target="_blank" rel="noopener noreferrer" className="btn-outline btn-sm inline-flex items-center justify-center text-center">
+                      Lihat Dokumen
+                    </a>
                   </td>
                 </tr>
               ))}
