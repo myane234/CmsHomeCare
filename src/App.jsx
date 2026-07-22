@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginAdminCms from './pages/LoginAdminCms';
 import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import DataNakes from './pages/admin/DataNakes';
 import PageLayanan from './pages/PageLayanan';
 import PagePromo from './pages/PagePromo';
 import FormTambah from './pages/FormTambah';
@@ -16,10 +18,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 function App() {
   return (
     <Routes>
-      {/* Public route */}
       <Route path="/login" element={<LoginAdminCms />} />
 
-      {/* Protected admin routes, all wrapped in AdminLayout (sidebar + topbar) */}
       <Route
         element={
           <ProtectedRoute>
@@ -28,6 +28,8 @@ function App() {
         }
       >
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/nakes" element={<DataNakes />} />
         <Route path="/layanan" element={<PageLayanan />} />
         <Route path="/promo" element={<PagePromo />} />
         <Route path="/promo/tambah" element={<PromoTambah />} />
@@ -39,7 +41,6 @@ function App() {
         <Route path="/artikel/:id/edit" element={<FormEditArtikel />} />
       </Route>
 
-      {/* Default redirect */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
