@@ -12,14 +12,28 @@ export async function login(email, password) {
     const body = await res.json();
 
     if (res.ok && body.success) {
+      // Debug: lihat response dari backend di console browser (F12)
+      console.log('🔐 Login response body:', JSON.stringify(body.data, null, 2));
+      console.log('🔐 Roles from backend:', body.data.roles);
+
+
+      let roles = body.data.roles ?? body.data.role ?? [];
+      if (typeof roles === 'string') {
+        roles = [roles];
+      } else if (!Array.isArray(roles)) {
+        roles = []; 
+      }
+
       const session = {
         token: body.data.token,
         email,
         name: body.data.nama || 'Admin',
-        roles: body.data.roles,
+        roles: roles,
         loggedInAt: new Date().toISOString(),
       };
       localStorage.setItem(AUTH_KEY, JSON.stringify(session));
+      console.log(' Session saved:', JSON.stringify(session, null, 2));
+      console.log(' Is Super Admin?', roles.includes('super_admin'));
       return { success: true };
     }
     

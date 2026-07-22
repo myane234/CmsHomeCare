@@ -2,6 +2,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import { getSession, logout } from '../utils/auth';
+import { isSuperAdmin } from '../utils/role';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -63,7 +64,14 @@ export default function AdminLayout() {
                     <div className="truncate text-sm font-bold">
                       {session?.name || 'Admin'}
                     </div>
-                    <div className="truncate text-xs text-slate-500">{session?.email}</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="truncate text-xs text-slate-500">{session?.email}</span>
+                      {isSuperAdmin() && (
+                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                          Super Admin
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="my-3.5 h-px bg-black/10" />
