@@ -6,6 +6,7 @@ const menuItems = [
   { to: '/layanan', label: 'Layanan', icon: '🩺' },
   { to: '/promo', label: 'Promo', icon: '🏷️' },
   { to: '/artikel', label: 'Artikel', icon: '📰' },
+  { to: '/admin/nakes-request', label: 'Request Nakes', icon: '📝' },
 ];
 
 export default function Sidebar({ open, onClose }) {
