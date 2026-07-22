@@ -1,28 +1,36 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllLayanan } from '../data/layananData';
+import { getAllPromo } from '../data/PromoEndpoint';
+import { getAllArtikel } from '../data/artikelData';
 import { getSession } from '../utils/auth';
+import { FaStethoscope, FaGift, FaRegFileAlt } from 'react-icons/fa';
 
 export default function Dashboard() {
   const [layanan, setLayanan] = useState([]);
+  const [promo, setPromo] = useState([]);
+  const [artikel, setArtikel] = useState([]);
   const [loading, setLoading] = useState(true);
   const session = getSession();
 
   useEffect(() => {
-    getAllLayanan().then((data) => {
-      setLayanan(data);
-      setLoading(false);
-    });
+    Promise.all([getAllLayanan(), getAllPromo(), getAllArtikel()])
+      .then(([layananData, promoData, artikelData]) => {
+        setLayanan(layananData || []);
+        setPromo(promoData || []);
+        setArtikel(artikelData || []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error fetching dashboard data:', err);
+        setLoading(false);
+      });
   }, []);
 
-  const totalLayanan = layanan.length;
-  const totalAktif = layanan.filter((l) => l.status === 'aktif').length;
-  const totalNonaktif = layanan.filter((l) => l.status === 'nonaktif').length;
-
   const summaryCards = [
-    { label: 'Total Layanan', value: totalLayanan, icon: '🩺' },
-    { label: 'Layanan Aktif', value: totalAktif, icon: '✅' },
-    { label: 'Layanan Nonaktif', value: totalNonaktif, icon: '⏸️' },
+    { label: 'Total Layanan', value: layanan.length, icon: <FaStethoscope /> },
+    { label: 'Total Promo', value: promo.length, icon: <FaGift /> },
+    { label: 'Total Artikel', value: artikel.length, icon: <FaRegFileAlt /> },
   ];
 
   return (
@@ -48,72 +56,120 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="card overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
-          <h2 className="text-base font-bold">Layanan Terbaru</h2>
-          <Link to="/layanan" className="btn-outline">
-            Lihat Semua
-          </Link>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Layanan */}
+        <div className="card overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+            <h2 className="text-base font-bold">Layanan Terbaru</h2>
+            <Link to="/layanan" className="btn-outline">
+              Lihat Semua
+            </Link>
+          </div>
+          {loading ? (
+            <p className="p-10 text-center text-sm text-slate-500">Memuat data...</p>
+          ) : layanan.length === 0 ? (
+            <p className="p-10 text-center text-sm text-slate-500">Belum ada data layanan.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[300px] border-collapse">
+                <thead>
+                  <tr>
+                    <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nama</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Harga</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {layanan.slice(0, 5).map((item) => (
+                    <tr key={item.id} className="hover:bg-slate-50">
+                      <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.nama}</td>
+                      <td className="border-b border-slate-200 px-4 py-3 text-sm">Rp {Number(item.harga).toLocaleString('id-ID')}</td>
+                      <td className="border-b border-slate-200 px-4 py-3 text-sm">
+                        <span className={`badge badge-${item.status}`}>
+                          {item.status === 'aktif' ? 'Aktif' : 'Nonaktif'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
-        {loading ? (
-          <p className="p-10 text-center text-sm text-slate-500">Memuat data...</p>
-        ) : layanan.length === 0 ? (
-          <p className="p-10 text-center text-sm text-slate-500">Belum ada data layanan.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[500px] border-collapse">
-              <thead>
-                <tr>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Gambar
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Nama Layanan
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Kategori
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Harga
-                  </th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {layanan.slice(0, 5).map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50">
-                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
-                      {item.gambar ? (
-                        <img
-                          src={item.gambar}
-                          alt={item.nama}
-                          className="h-12 w-16 rounded-lg border border-slate-200 object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-12 w-16 items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 text-[10px] text-slate-400">
-                          No img
-                        </div>
-                      )}
-                    </td>
-                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.nama}</td>
-                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.kategori}</td>
-                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
-                      Rp {Number(item.harga).toLocaleString('id-ID')}
-                    </td>
-                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
-                      <span className={`badge badge-${item.status}`}>
-                        {item.status === 'aktif' ? 'Aktif' : 'Nonaktif'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Promo */}
+        <div className="card overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+            <h2 className="text-base font-bold">Promo Terbaru</h2>
+            <Link to="/promo" className="btn-outline">
+              Lihat Semua
+            </Link>
           </div>
-        )}
+          {loading ? (
+            <p className="p-10 text-center text-sm text-slate-500">Memuat data...</p>
+          ) : promo.length === 0 ? (
+            <p className="p-10 text-center text-sm text-slate-500">Belum ada data promo.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[300px] border-collapse">
+                <thead>
+                  <tr>
+                    <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nama Promo</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Diskon (%)</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {promo.slice(0, 5).map((item) => (
+                    <tr key={item.id} className="hover:bg-slate-50">
+                      <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.nama_paket}</td>
+                      <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.diskon_persen}%</td>
+                      <td className="border-b border-slate-200 px-4 py-3 text-sm">
+                        <span className={`badge ${item.status_promo === 'Aktif' ? 'badge-aktif' : 'badge-nonaktif'}`}>
+                          {item.status_promo}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Artikel */}
+        <div className="card overflow-hidden lg:col-span-2">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+            <h2 className="text-base font-bold">Artikel Terbaru</h2>
+            <Link to="/artikel" className="btn-outline">
+              Lihat Semua
+            </Link>
+          </div>
+          {loading ? (
+            <p className="p-10 text-center text-sm text-slate-500">Memuat data...</p>
+          ) : artikel.length === 0 ? (
+            <p className="p-10 text-center text-sm text-slate-500">Belum ada data artikel.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[500px] border-collapse">
+                <thead>
+                  <tr>
+                    <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Judul Artikel</th>
+                    <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Kategori</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {artikel.slice(0, 5).map((item) => (
+                    <tr key={item.id_artikel || item.id} className="hover:bg-slate-50">
+                      <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.judul_artikel}</td>
+                      <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.kategori_artikel}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

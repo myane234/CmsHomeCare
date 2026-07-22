@@ -1,12 +1,16 @@
 import { NavLink } from 'react-router-dom';
 import logo from '../assets/logo.png';
+<<<<<<< HEAD
 import { isSuperAdmin } from '../utils/role';
+=======
+import { FaStethoscope, FaGift, FaRegFileAlt, FaChartBar } from 'react-icons/fa';
+>>>>>>> 7e6d8671155e49e8fda82aeee8be174f230c5228
 
 const menuItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { to: '/layanan', label: 'Layanan', icon: '🩺' },
-  { to: '/promo', label: 'Promo', icon: '🏷️' },
-  { to: '/artikel', label: 'Artikel', icon: '📰' },
+  { to: '/dashboard', label: 'Dashboard', icon: <FaChartBar /> },
+  { to: '/layanan', label: 'Layanan', icon: <FaStethoscope /> },
+  { to: '/promo', label: 'Promo', icon: <FaGift /> },
+  { to: '/artikel', label: 'Artikel', icon: <FaRegFileAlt /> },
 ];
 
 // Menu khusus Super Admin
