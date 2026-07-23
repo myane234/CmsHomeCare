@@ -15,6 +15,7 @@ import FormTambahArtikel from './pages/FormTambahArtikel';
 import FormEditArtikel from './pages/FormEditArtikel';
 import AdminLayout from './components/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
+import KelolaAdmin from './pages/KelolaAdmin';
 
 function App() {
   return (
@@ -44,6 +45,18 @@ function App() {
         <Route path="/artikel/:id/edit" element={<FormEditArtikel />} />
       </Route>
 
+      {/* Super Admin only routes */}
+      <Route
+        element={
+          <ProtectedRoute requiredRole="super_admin">
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/kelola-admin" element={<KelolaAdmin />} />
+      </Route>
+
+      {/* Default redirect */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

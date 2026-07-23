@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import logo from '../assets/logo.png';
+import { FaStethoscope, FaGift, FaRegFileAlt, FaChartBar } from 'react-icons/fa';
 import { FaStethoscope, FaGift, FaRegFileAlt, FaChartBar, FaUserShield } from 'react-icons/fa';
 
 const menuItems = [
@@ -10,7 +11,15 @@ const menuItems = [
   { to: '/artikel', label: 'Artikel', icon: <FaRegFileAlt /> },
 ];
 
+// Menu khusus Super Admin
+const superAdminMenus = [
+  { to: '/kelola-admin', label: 'Kelola Admin', icon: '🔧' },
+];
+
 export default function Sidebar({ open, onClose }) {
+  // Gabungkan menu berdasarkan role
+  const menus = isSuperAdmin() ? [...menuItems, ...superAdminMenus] : menuItems;
+
   return (
     <>
       {open && (
@@ -34,7 +43,7 @@ export default function Sidebar({ open, onClose }) {
         </div>
 
         <nav className="flex flex-col gap-1 p-3">
-          {menuItems.map((item) => (
+          {menus.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
