@@ -35,8 +35,14 @@ export default function PagePromo() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentPage(1);
+  }, [search]);
 
   // Logika Filter
   const filtered = promo.filter((item) => {
@@ -122,6 +128,7 @@ export default function PagePromo() {
               <tbody>
                 {paginated.map((item, idx) => {
                   const promoId = item.id_promo ?? item.id;
+                  const itemNumber = (currentPage - 1) * itemsPerPage + index + 1;
                   const layananLabel = Array.isArray(item.layanans)
                     ? item.layanans.map((l) => l.nama_layanan ?? l.nama ?? l.id).join(', ')
                     : '-';
@@ -174,6 +181,74 @@ export default function PagePromo() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {!loading && filtered.length > 0 && totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-3.5 sm:px-6">
+            <div className="flex flex-1 justify-between sm:hidden">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="btn-outline btn-sm"
+              >
+                Sebelumnya
+              </button>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="btn-outline btn-sm"
+              >
+                Selanjutnya
+              </button>
+            </div>
+            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-slate-500">
+                  Menampilkan <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> sampai{' '}
+                  <span className="font-semibold">
+                    {Math.min(currentPage * itemsPerPage, filtered.length)}
+                  </span>{' '}
+                  dari <span className="font-medium">{filtered.length}</span> data
+                </p>
+              </div>
+              <div>
+                <nav className="isolate inline-flex -space-x-px rounded-md shadow-xs" aria-label="Pagination">
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center rounded-l-md px-2.5 py-1.5 text-sm font-semibold text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Sebelumnya
+                  </button>
+                  {Array.from({ length: totalPages }, (_, idx) => {
+                    const pageNum = idx + 1;
+                    const isCurrent = pageNum === currentPage;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`relative inline-flex items-center px-3 py-1.5 text-sm font-semibold border ${
+                          isCurrent
+                            ? 'z-10 bg-primary text-white border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+                            : 'text-slate-950 border-slate-200 bg-white hover:bg-slate-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center rounded-r-md px-2.5 py-1.5 text-sm font-semibold text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Selanjutnya
+                  </button>
+                </nav>
+              </div>
+            </div>
           </div>
         )}
       </div>

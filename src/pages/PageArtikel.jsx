@@ -22,6 +22,8 @@ export default function PageArtikel() {
   const [kategoriFilter, setKategoriFilter] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // State untuk Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,6 +39,7 @@ export default function PageArtikel() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
     setCurrentPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -170,8 +173,8 @@ export default function PageArtikel() {
                   Hapus
                 </button>
               </div>
-            </div>
-          ))
+            )}
+          </>
         )}
       </div>
 
