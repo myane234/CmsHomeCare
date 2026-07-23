@@ -1,6 +1,6 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
-import Sidebar from './Sidebar';
+import AdminSidebar from '../pages/admin/AdminSidebar';
 import { getSession, logout } from '../utils/auth';
 import { isSuperAdmin } from '../utils/role';
 
@@ -28,7 +28,7 @@ export default function AdminLayout() {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between bg-accent px-4 sm:px-7 border-b border-slate-200">

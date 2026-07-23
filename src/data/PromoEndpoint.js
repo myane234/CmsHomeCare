@@ -1,5 +1,6 @@
 import { URL } from '../utils/getUrl.js';
 import { getAuthHeaders } from '../utils/auth.js';
+import { BASE_URL } from '../utils/apiClient.js';
 
 // Helper untuk membuat FormData dari payload
 function objectToFormData(obj) {
@@ -57,9 +58,11 @@ function normalizePromo(raw) {
     gambar_promo: raw.gambar_promo ?? null, // Memastikan field gambar ada
     layanan_ids: layananIds.filter(Boolean),
     layanans: layanan,
+    updated_at: raw.updated_at ?? null,
   };
 }
 
+// ini buat update terakhir
 export async function getAllPromo() {
   const res = await fetch(`${URL}/promo/`, { method: 'GET', headers: buildHeaders() });
   const json = await parseJsonResponse(res);

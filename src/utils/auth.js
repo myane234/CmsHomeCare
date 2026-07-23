@@ -38,7 +38,7 @@ export async function login(email, password) {
     }
     
     return { success: false, message: body.message || 'Email atau password salah' };
-  } catch (error) {
+  } catch {
     return { success: false, message: 'Gagal menghubungi server' };
   }
 }
@@ -54,7 +54,7 @@ export async function logout() {
           'Authorization': `Bearer ${session.token}`
         },
       });
-    } catch (e) {
+    } catch {
       // Ignore error on logout
     }
   }

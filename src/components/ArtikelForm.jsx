@@ -15,6 +15,7 @@ export default function ArtikelForm({ initialData, onSubmit, submitting, mode, s
 
   useEffect(() => {
     if (initialData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({
         judul_artikel: initialData.judul_artikel || '',
         kategori_artikel: initialData.kategori_artikel || KATEGORI_ARTIKEL_OPTIONS[0],
@@ -130,17 +131,33 @@ export default function ArtikelForm({ initialData, onSubmit, submitting, mode, s
         </div>
       </div>
 
-      <div className="mt-7 flex flex-col-reverse justify-end gap-2.5 border-t border-slate-200 pt-5 sm:flex-row">
-        <a href="/artikel" className="btn-outline text-center">
-          Batal
-        </a>
-        <button type="submit" className="btn-primary" disabled={submitting}>
-          {submitting
-            ? 'Menyimpan...'
-            : mode === 'edit'
-            ? 'Simpan Perubahan'
-            : 'Tambah Artikel'}
-        </button>
+      <div className="mt-7 flex flex-col-reverse justify-between gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-center">
+        <div>
+          {mode === 'edit' && initialData?.updated_at && (
+            <span className="text-xs text-slate-400">
+              Terakhir diperbarui:{' '}
+              {new Date(initialData.updated_at).toLocaleString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              }).replace(/\./g, ':')}
+            </span>
+          )}
+        </div>
+        <div className="flex flex-col-reverse gap-2.5 sm:flex-row">
+          <a href="/artikel" className="btn-outline text-center">
+            Batal
+          </a>
+          <button type="submit" className="btn-primary" disabled={submitting}>
+            {submitting
+              ? 'Menyimpan...'
+              : mode === 'edit'
+              ? 'Simpan Perubahan'
+              : 'Tambah Artikel'}
+          </button>
+        </div>
       </div>
     </form>
   );

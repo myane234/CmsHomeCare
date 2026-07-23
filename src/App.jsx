@@ -1,7 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginAdminCms from './pages/LoginAdminCms';
+import LoginSuperAdmin from './pages/super-admin/loginAdmin';
 import Dashboard from './pages/Dashboard';
-import AdminDashboard from './pages/AdminDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import DataNakes from './pages/admin/DataNakes';
 import PageLayanan from './pages/PageLayanan';
 import PagePromo from './pages/PagePromo';
 import FormTambah from './pages/FormTambah';
@@ -18,11 +20,10 @@ import KelolaAdmin from './pages/KelolaAdmin';
 function App() {
   return (
     <Routes>
-      {/* Public route */}
+      {/* Public routes */}
       <Route path="/login" element={<LoginAdminCms />} />
-      <Route path="/admindashboard" element={<AdminDashboard />} />
+      <Route path="/super-admin/login" element={<LoginSuperAdmin />} />
 
-      {/* Protected admin routes, all wrapped in AdminLayout (sidebar + topbar) */}
       <Route
         element={
           <ProtectedRoute>
@@ -31,6 +32,8 @@ function App() {
         }
       >
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/nakes" element={<DataNakes />} />
         <Route path="/layanan" element={<PageLayanan />} />
         <Route path="/promo" element={<PagePromo />} />
         <Route path="/promo/tambah" element={<PromoTambah />} />
