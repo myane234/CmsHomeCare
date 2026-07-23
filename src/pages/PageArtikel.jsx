@@ -22,10 +22,8 @@ export default function PageArtikel() {
   const [kategoriFilter, setKategoriFilter] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-
-  // State untuk Pagination
+  
+  // State Pagination (cukup 1 pasang saja)
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -173,8 +171,8 @@ export default function PageArtikel() {
                   Hapus
                 </button>
               </div>
-            )}
-          </>
+            </div>
+          ))
         )}
       </div>
 
@@ -185,6 +183,7 @@ export default function PageArtikel() {
         onPageChange={(page) => setCurrentPage(page)}
       />
 
+      {/* Modal Konfirmasi Hapus */}
       {deleteTarget && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-5"

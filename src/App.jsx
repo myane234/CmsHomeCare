@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginAdminCms from './pages/LoginAdminCms';
-import LoginSuperAdmin from './pages/super-admin/loginAdmin';
+// import LoginSuperAdmin from './pages/super-admin/loginAdmin';
+import LoginSuperAdmin from './pages/LoginAdminCms';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import DataNakes from './pages/admin/DataNakes';
