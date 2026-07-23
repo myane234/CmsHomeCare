@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import logo from '../assets/logo.png';
-import { FaStethoscope, FaGift, FaRegFileAlt, FaChartBar } from 'react-icons/fa';
 import { FaStethoscope, FaGift, FaRegFileAlt, FaChartBar, FaUserShield } from 'react-icons/fa';
+import { isSuperAdmin } from '../utils/role';
 
 const menuItems = [
   { to: '/dashboard', label: 'Dashboard', icon: <FaChartBar /> },
