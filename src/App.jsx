@@ -10,7 +10,6 @@ import PromoEdit from './pages/PromoEdit';
 import PageArtikel from './pages/PageArtikel';
 import FormTambahArtikel from './pages/FormTambahArtikel';
 import FormEditArtikel from './pages/FormEditArtikel';
-import PageNakesRequest from './pages/PageNakesRequest';
 import AdminLayout from './components/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -38,8 +37,6 @@ function App() {
         <Route path="/artikel" element={<PageArtikel />} />
         <Route path="/artikel/tambah" element={<FormTambahArtikel />} />
         <Route path="/artikel/:id/edit" element={<FormEditArtikel />} />
-        <Route path="/admin/nakes-request" element={<PageNakesRequest />} />
-        <Route path="/nakes-request" element={<PageNakesRequest />} />
       </Route>
 
       {/* Default redirect */}
