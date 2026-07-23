@@ -2,6 +2,20 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { deletePromo, getAllPromo } from '../data/PromoEndpoint';
 import { getImageUrl } from '../data/imageHelper.js';
+import Pagination from '../components/Pagination';
+
+function formatDate(raw) {
+  if (!raw) return '-';
+  const d = new Date(raw);
+  if (isNaN(d)) return '-';
+  return d.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+const ITEMS_PER_PAGE = 3;
 
 export default function PagePromo() {
   const [promo, setPromo] = useState([]);
@@ -9,6 +23,7 @@ export default function PagePromo() {
   const [search, setSearch] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   function loadData() {
     setLoading(true);
@@ -20,8 +35,14 @@ export default function PagePromo() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentPage(1);
+  }, [search]);
 
   // Logika Filter
   const filtered = promo.filter((item) => {
@@ -34,6 +55,15 @@ export default function PagePromo() {
     ).toLowerCase();
     return nama.includes(query) || layanan.includes(query);
   });
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginated = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+  };
 
   // Logika Hapus
   async function confirmDelete() {
@@ -69,7 +99,7 @@ export default function PagePromo() {
           type="text"
           placeholder="Cari nama paket atau layanan..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearchChange}
           className="form-input max-w-full sm:max-w-[340px]"
         />
       </div>
@@ -82,26 +112,33 @@ export default function PagePromo() {
           <p className="p-10 text-center text-sm text-slate-500">Tidak ada promo ditemukan.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px] border-collapse">
+            <table className="w-full min-w-[900px] border-collapse">
               <thead>
                 <tr>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">No</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Gambar</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nama Paket</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Diskon</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Layanan</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Status</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Diperbarui</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-slate-500">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((item) => {
+                {paginated.map((item, idx) => {
                   const promoId = item.id_promo ?? item.id;
+                  const itemNumber = (currentPage - 1) * itemsPerPage + index + 1;
                   const layananLabel = Array.isArray(item.layanans)
                     ? item.layanans.map((l) => l.nama_layanan ?? l.nama ?? l.id).join(', ')
                     : '-';
 
                   return (
                     <tr key={promoId} className="hover:bg-slate-50">
+                      {/* Nomor */}
+                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm text-slate-400 font-medium">
+                        {startIndex + idx + 1}
+                      </td>
                       {/* Kolom Gambar */}
                       <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
                         {item.gambar_promo ? (
@@ -124,6 +161,10 @@ export default function PagePromo() {
                            {item.status_promo ?? '-'}
                         </span>
                       </td>
+                      {/* Kolom Diperbarui */}
+                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm text-slate-500 whitespace-nowrap">
+                        {formatDate(item.updated_at)}
+                      </td>
                       <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
                         <div className="flex justify-end gap-2">
                           <Link to={`/promo/${promoId}/edit`} className="btn-outline btn-sm">Edit</Link>
@@ -142,7 +183,82 @@ export default function PagePromo() {
             </table>
           </div>
         )}
+
+        {/* Pagination Controls */}
+        {!loading && filtered.length > 0 && totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-3.5 sm:px-6">
+            <div className="flex flex-1 justify-between sm:hidden">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="btn-outline btn-sm"
+              >
+                Sebelumnya
+              </button>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="btn-outline btn-sm"
+              >
+                Selanjutnya
+              </button>
+            </div>
+            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-slate-500">
+                  Menampilkan <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> sampai{' '}
+                  <span className="font-semibold">
+                    {Math.min(currentPage * itemsPerPage, filtered.length)}
+                  </span>{' '}
+                  dari <span className="font-medium">{filtered.length}</span> data
+                </p>
+              </div>
+              <div>
+                <nav className="isolate inline-flex -space-x-px rounded-md shadow-xs" aria-label="Pagination">
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center rounded-l-md px-2.5 py-1.5 text-sm font-semibold text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Sebelumnya
+                  </button>
+                  {Array.from({ length: totalPages }, (_, idx) => {
+                    const pageNum = idx + 1;
+                    const isCurrent = pageNum === currentPage;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`relative inline-flex items-center px-3 py-1.5 text-sm font-semibold border ${
+                          isCurrent
+                            ? 'z-10 bg-primary text-white border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+                            : 'text-slate-950 border-slate-200 bg-white hover:bg-slate-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center rounded-r-md px-2.5 py-1.5 text-sm font-semibold text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Selanjutnya
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(page) => setCurrentPage(page)}
+      />
 
       {/* Modal Delete */}
       {deleteTarget && (

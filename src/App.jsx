@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginAdminCms from './pages/LoginAdminCms';
+import LoginSuperAdmin from './pages/super-admin/loginAdmin';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import DataNakes from './pages/admin/DataNakes';
@@ -18,7 +19,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 function App() {
   return (
     <Routes>
+      {/* Public routes */}
       <Route path="/login" element={<LoginAdminCms />} />
+      <Route path="/super-admin/login" element={<LoginSuperAdmin />} />
 
       <Route
         element={
