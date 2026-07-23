@@ -1,16 +1,13 @@
 import { NavLink } from 'react-router-dom';
-import logo from '../assets/logo.png';
-import { FaStethoscope, FaGift, FaRegFileAlt, FaChartBar, FaUserShield } from 'react-icons/fa';
+import logo from '../../assets/logo.png';
+import { FaChartBar, FaUserMd } from 'react-icons/fa';
 
 const menuItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: <FaChartBar /> },
-  { to: '/admin/dashboard', label: 'Admin Dashboard', icon: <FaUserShield /> }, // MENU BARU
-  { to: '/layanan', label: 'Layanan', icon: <FaStethoscope /> },
-  { to: '/promo', label: 'Promo', icon: <FaGift /> },
-  { to: '/artikel', label: 'Artikel', icon: <FaRegFileAlt /> },
+  { to: '/admin/dashboard', label: 'Dashboard', icon: <FaChartBar /> },
+  { to: '/admin/nakes', label: 'Data Nakes', icon: <FaUserMd /> },
 ];
 
-export default function Sidebar({ open, onClose }) {
+export default function AdminSidebar({ open, onClose }) {
   return (
     <>
       {open && (
@@ -22,11 +19,11 @@ export default function Sidebar({ open, onClose }) {
 
       <aside
         className={
-          'fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-white border-r border-slate-200 transition-transform duration-200 md:static md:translate-x-0 ' +
+          'fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-200 md:static md:translate-x-0 ' +
           (open ? 'translate-x-0' : '-translate-x-full')
         }
       >
-        <div className="flex flex-col items-start gap-1 bg-accent px-5 py-5 border-b border-slate-200">
+        <div className="flex flex-col items-start gap-1 border-b border-slate-200 bg-accent px-5 py-5">
           <img src={logo} alt="Smartcare" className="h-10 w-auto object-contain" />
           <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             CMS Admin
