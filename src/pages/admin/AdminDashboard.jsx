@@ -38,7 +38,7 @@ export default function AdminDashboard() {
       <div className="mb-7 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {summaryCards.map((card) => (
           <div className="card flex items-center gap-3.5 p-5" key={card.label}>
-            <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg ${card.bg} text-xl ${card.color}`}>
+            <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${card.bg} text-xl ${card.color}`}>
               {card.icon}
             </div>
             <div>
@@ -58,7 +58,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[500px] border-collapse">
+          <table className="w-full min-w-125 border-collapse">
             <thead>
               <tr>
                 <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nama</th>

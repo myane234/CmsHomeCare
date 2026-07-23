@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FaSearch, FaUserMd } from 'react-icons/fa';
+import { FaSearch } from 'react-icons/fa';
 
 const nakesData = [
   { id: 1, foto: '/nakesgambar.jpg', nama: 'Dr. Anisa Rahma', jenis: 'Pergantian Alat Medis', nomorStr: 'STR-2024001', lulusan: 'Poltekkes Kemenkes Jakarta', status: 'Selesai', dokumenPdf: '/Ijazah-Jokowi.jpg' },
@@ -66,7 +66,7 @@ export default function DataNakes() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] border-collapse">
+          <table className="w-full min-w-225 border-collapse">
             <thead>
               <tr>
                 <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Foto</th>
