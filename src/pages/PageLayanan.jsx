@@ -1,6 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllLayanan, deleteLayanan } from '../data/layananData';
+import Pagination from '../components/Pagination';
+
+function formatDate(raw) {
+  if (!raw) return '-';
+  const d = new Date(raw);
+  if (isNaN(d)) return '-';
+  return d.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+const ITEMS_PER_PAGE = 5;
 
 export default function PageLayanan() {
   const [layanan, setLayanan] = useState([]);
@@ -9,7 +23,6 @@ export default function PageLayanan() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
 
   function loadData() {
     setLoading(true);
@@ -33,11 +46,14 @@ export default function PageLayanan() {
     (item.nama + item.kategori).toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginatedData = filtered.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginated = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+  };
 
   async function confirmDelete() {
     if (!deleteTarget) return;
@@ -65,7 +81,7 @@ export default function PageLayanan() {
           type="text"
           placeholder="Cari nama atau kategori layanan..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearchChange}
           className="form-input max-w-full sm:max-w-[340px]"
         />
       </div>
@@ -77,10 +93,10 @@ export default function PageLayanan() {
           <p className="p-10 text-center text-sm text-slate-500">Tidak ada layanan ditemukan.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[700px] border-collapse">
+            <table className="w-full min-w-[800px] border-collapse">
               <thead>
                 <tr>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500 w-12">No.</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">No</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Gambar</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nama Layanan</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Kategori</th>
@@ -88,60 +104,61 @@ export default function PageLayanan() {
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Tipe Layanan</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Durasi</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Transport</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Diperbarui</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-slate-500">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedData.map((item, index) => {
-                  const itemNumber = (currentPage - 1) * itemsPerPage + index + 1;
-                  return (
-                    <tr key={item.id} className="hover:bg-slate-50">
-                      {/* Kolom Nomor */}
-                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm font-semibold text-slate-500">{itemNumber}</td>
-                      {/* Kolom Gambar */}
-                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
-                        {item.gambar ? (
-                          <img
-                            src={item.gambar}
-                            alt={item.nama}
-                            className="h-14 w-20 rounded-lg border border-slate-200 object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-14 w-20 items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 text-[11px] text-slate-400">
-                            No img
-                          </div>
-                        )}
-                      </td>
-                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.nama}</td>
-                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.kategori}</td>
-                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
-                        Rp {Number(item.harga).toLocaleString('id-ID')}
-                      </td>
-                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm capitalize">
-                        {item.tipe_layanan || 'Tindakan'}
-                      </td>
-                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
-                        {item.tipe_layanan === 'durasi' ? `${item.durasi} menit` : '-'}
-                      </td>
-                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
-                        {item.transport ? 'Ya' : 'Tidak'}
-                      </td>
-                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
-                        <div className="flex justify-end gap-2">
-                          <Link to={`/layanan/${item.id}/edit`} className="btn-outline btn-sm">
-                            Edit
-                          </Link>
-                          <button
-                            className="btn-danger btn-sm"
-                            onClick={() => setDeleteTarget(item)}
-                          >
-                            Hapus
-                          </button>
+                {paginated.map((item, idx) => (
+                  <tr key={item.id} className="hover:bg-slate-50">
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm text-slate-400 font-medium">
+                      {startIndex + idx + 1}
+                    </td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
+                      {item.gambar ? (
+                        <img
+                          src={item.gambar}
+                          alt={item.nama}
+                          className="h-14 w-20 rounded-lg border border-slate-200 object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-14 w-20 items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 text-[11px] text-slate-400">
+                          No img
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                      )}
+                    </td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.nama}</td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.kategori}</td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
+                      Rp {Number(item.harga).toLocaleString('id-ID')}
+                    </td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm capitalize">
+                      {item.tipe_layanan || 'Tindakan'}
+                    </td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
+                      {item.tipe_layanan === 'durasi' ? `${item.durasi} menit` : '-'}
+                    </td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
+                      {item.transport ? 'Ya' : 'Tidak'}
+                    </td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm text-slate-500 whitespace-nowrap">
+                      {formatDate(item.updated_at)}
+                    </td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
+                      <div className="flex justify-end gap-2">
+                        <Link to={`/layanan/${item.id}/edit`} className="btn-outline btn-sm">
+                          Edit
+                        </Link>
+                        <button
+                          className="btn-danger btn-sm"
+                          onClick={() => setDeleteTarget(item)}
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -215,6 +232,13 @@ export default function PageLayanan() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(page) => setCurrentPage(page)}
+      />
 
       {deleteTarget && (
         <div

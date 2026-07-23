@@ -2,6 +2,20 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { deletePromo, getAllPromo } from '../data/PromoEndpoint';
 import { getImageUrl } from '../data/imageHelper.js';
+import Pagination from '../components/Pagination';
+
+function formatDate(raw) {
+  if (!raw) return '-';
+  const d = new Date(raw);
+  if (isNaN(d)) return '-';
+  return d.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+const ITEMS_PER_PAGE = 3;
 
 export default function PagePromo() {
   const [promo, setPromo] = useState([]);
@@ -10,7 +24,6 @@ export default function PagePromo() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
 
   function loadData() {
     setLoading(true);
@@ -43,11 +56,14 @@ export default function PagePromo() {
     return nama.includes(query) || layanan.includes(query);
   });
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginatedData = filtered.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginated = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+  };
 
   // Logika Hapus
   async function confirmDelete() {
@@ -83,7 +99,7 @@ export default function PagePromo() {
           type="text"
           placeholder="Cari nama paket atau layanan..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearchChange}
           className="form-input max-w-full sm:max-w-[340px]"
         />
       </div>
@@ -96,20 +112,21 @@ export default function PagePromo() {
           <p className="p-10 text-center text-sm text-slate-500">Tidak ada promo ditemukan.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px] border-collapse">
+            <table className="w-full min-w-[900px] border-collapse">
               <thead>
                 <tr>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500 w-12">No.</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">No</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Gambar</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nama Paket</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Diskon</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Layanan</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Status</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Diperbarui</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-slate-500">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedData.map((item, index) => {
+                {paginated.map((item, idx) => {
                   const promoId = item.id_promo ?? item.id;
                   const itemNumber = (currentPage - 1) * itemsPerPage + index + 1;
                   const layananLabel = Array.isArray(item.layanans)
@@ -118,8 +135,10 @@ export default function PagePromo() {
 
                   return (
                     <tr key={promoId} className="hover:bg-slate-50">
-                      {/* Kolom Nomor */}
-                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm font-semibold text-slate-500">{itemNumber}</td>
+                      {/* Nomor */}
+                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm text-slate-400 font-medium">
+                        {startIndex + idx + 1}
+                      </td>
                       {/* Kolom Gambar */}
                       <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
                         {item.gambar_promo ? (
@@ -141,6 +160,10 @@ export default function PagePromo() {
                         <span className={`px-2 py-1 rounded text-xs font-medium ${item.status_promo === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
                            {item.status_promo ?? '-'}
                         </span>
+                      </td>
+                      {/* Kolom Diperbarui */}
+                      <td className="border-b border-slate-200 px-4 py-3.5 text-sm text-slate-500 whitespace-nowrap">
+                        {formatDate(item.updated_at)}
                       </td>
                       <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
                         <div className="flex justify-end gap-2">
@@ -229,6 +252,13 @@ export default function PagePromo() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(page) => setCurrentPage(page)}
+      />
 
       {/* Modal Delete */}
       {deleteTarget && (

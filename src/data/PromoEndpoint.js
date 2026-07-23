@@ -58,6 +58,7 @@ function normalizePromo(raw) {
     gambar_promo: raw.gambar_promo ?? null, // Memastikan field gambar ada
     layanan_ids: layananIds.filter(Boolean),
     layanans: layanan,
+    updated_at: raw.updated_at ?? null,
   };
 }
 

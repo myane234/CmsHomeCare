@@ -1,6 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllArtikel, deleteArtikel, KATEGORI_ARTIKEL_OPTIONS } from '../data/artikelData';
+import Pagination from '../components/Pagination';
+
+function formatDate(raw) {
+  if (!raw) return '-';
+  const d = new Date(raw);
+  if (isNaN(d)) return '-';
+  return d.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
 
 export default function PageArtikel() {
   const [artikel, setArtikel] = useState([]);
@@ -10,6 +22,10 @@ export default function PageArtikel() {
   const [kategoriFilter, setKategoriFilter] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // State untuk Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -25,23 +41,25 @@ export default function PageArtikel() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
+    setCurrentPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kategoriFilter]);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+  // Reset ke halaman 1 saat pencarian dilakukan
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
     setCurrentPage(1);
-  }, [search, kategoriFilter]);
+  };
 
+  // Filter berdasarkan search
   const filtered = artikel.filter((item) =>
     item.judul_artikel?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // --- LOGIKA PAGINATION ---
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginatedData = filtered.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedArtikel = filtered.slice(startIndex, startIndex + itemsPerPage);
 
   async function confirmDelete() {
     if (!deleteTarget) return;
@@ -62,7 +80,7 @@ export default function PageArtikel() {
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="page-title">Artikel</h1>
-          <p className="page-subtitle">Kelola artikel & tips kesehatan SmartHomeCare</p>
+          <p className="page-subtitle">Kelola artikel &amp; tips kesehatan SmartHomeCare</p>
         </div>
         <Link to="/artikel/tambah" className="btn-primary">
           + Tambah Artikel
@@ -74,7 +92,7 @@ export default function PageArtikel() {
           type="text"
           placeholder="Cari judul artikel..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearchChange}
           className="form-input max-w-full sm:max-w-[300px]"
         />
         <select
@@ -100,134 +118,72 @@ export default function PageArtikel() {
       <div className="flex flex-col gap-4">
         {loading ? (
           <div className="card p-10 text-center text-sm text-slate-500">Memuat data...</div>
-        ) : filtered.length === 0 ? (
+        ) : paginatedArtikel.length === 0 ? (
           <div className="card p-10 text-center text-sm text-slate-500">
             Tidak ada artikel ditemukan.
           </div>
         ) : (
-          <>
-            {paginatedData.map((item, index) => {
-              const itemNumber = (currentPage - 1) * itemsPerPage + index + 1;
-              return (
-                <div
-                  key={item.id}
-                  className="card flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:p-5"
+          paginatedArtikel.map((item, idx) => (
+            <div
+              key={item.id}
+              className="card flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:p-5"
+            >
+              {/* Nomor urut */}
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500">
+                {startIndex + idx + 1}
+              </div>
+
+              {item.gambar_artikel ? (
+                <img
+                  src={item.gambar_artikel}
+                  alt={item.judul_artikel}
+                  className="h-44 w-full flex-shrink-0 rounded-lg object-cover sm:h-28 sm:w-40"
+                />
+              ) : (
+                <div className="flex h-44 w-full flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs text-slate-400 sm:h-28 sm:w-40">
+                  Tanpa gambar
+                </div>
+              )}
+
+              <div className="min-w-0 flex-1">
+                <span className="badge badge-aktif mb-2 inline-block">
+                  {item.kategori_artikel}
+                </span>
+                <h3 className="text-base font-bold text-slate-900">{item.judul_artikel}</h3>
+                <p className="mt-1.5 line-clamp-2 text-sm text-slate-500">
+                  {item.isi_artikel}
+                </p>
+                {/* Tanggal diperbarui */}
+                <p className="mt-2 text-xs text-slate-400">
+                  Diperbarui: <span className="font-medium text-slate-500">{formatDate(item.updated_at)}</span>
+                </p>
+              </div>
+
+              <div className="flex flex-shrink-0 flex-col gap-2">
+                <Link
+                  to={`/artikel/${item.id}/edit`}
+                  className="btn-outline btn-sm"
                 >
-                  {item.gambar_artikel ? (
-                    <img
-                      src={item.gambar_artikel}
-                      alt={item.judul_artikel}
-                      className="h-44 w-full flex-shrink-0 rounded-lg object-cover sm:h-28 sm:w-40"
-                    />
-                  ) : (
-                    <div className="flex h-44 w-full flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs text-slate-400 sm:h-28 sm:w-40">
-                      Tanpa gambar
-                    </div>
-                  )}
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-bold text-slate-400">
-                        #{itemNumber}
-                      </span>
-                      <span className="badge badge-aktif inline-block">
-                        {item.kategori_artikel}
-                      </span>
-                    </div>
-                    <h3 className="text-base font-bold text-slate-900">{item.judul_artikel}</h3>
-                    <p className="mt-1.5 line-clamp-2 text-sm text-slate-500">
-                      {item.isi_artikel}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-shrink-0 gap-2 sm:flex-col">
-                    <Link
-                      to={`/artikel/${item.id}/edit`}
-                      className="btn-outline btn-sm flex-1 sm:flex-none"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      className="btn-danger btn-sm flex-1 sm:flex-none"
-                      onClick={() => setDeleteTarget(item)}
-                    >
-                      Hapus
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-3.5 sm:px-6 card">
-                <div className="flex flex-1 justify-between sm:hidden">
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="btn-outline btn-sm"
-                  >
-                    Sebelumnya
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className="btn-outline btn-sm"
-                  >
-                    Selanjutnya
-                  </button>
-                </div>
-                <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm text-slate-500">
-                      Menampilkan <span className="font-semibold">{(currentPage - 1) * itemsPerPage + 1}</span> sampai{' '}
-                      <span className="font-semibold">
-                        {Math.min(currentPage * itemsPerPage, filtered.length)}
-                      </span>{' '}
-                      dari <span className="font-semibold">{filtered.length}</span> data
-                    </p>
-                  </div>
-                  <div>
-                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-xs" aria-label="Pagination">
-                      <button
-                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                        disabled={currentPage === 1}
-                        className="relative inline-flex items-center rounded-l-md px-2.5 py-1.5 text-sm font-semibold text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Sebelumnya
-                      </button>
-                      {Array.from({ length: totalPages }, (_, idx) => {
-                        const pageNum = idx + 1;
-                        const isCurrent = pageNum === currentPage;
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => setCurrentPage(pageNum)}
-                            className={`relative inline-flex items-center px-3 py-1.5 text-sm font-semibold border ${
-                              isCurrent
-                                ? 'z-10 bg-primary text-white border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
-                                : 'text-slate-950 border-slate-200 bg-white hover:bg-slate-50'
-                            }`}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      })}
-                      <button
-                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                        disabled={currentPage === totalPages}
-                        className="relative inline-flex items-center rounded-r-md px-2.5 py-1.5 text-sm font-semibold text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Selanjutnya
-                      </button>
-                    </nav>
-                  </div>
-                </div>
+                  Edit
+                </Link>
+                <button
+                  className="btn-danger btn-sm"
+                  onClick={() => setDeleteTarget(item)}
+                >
+                  Hapus
+                </button>
               </div>
             )}
           </>
         )}
       </div>
+
+      {/* Komponen Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(page) => setCurrentPage(page)}
+      />
 
       {deleteTarget && (
         <div

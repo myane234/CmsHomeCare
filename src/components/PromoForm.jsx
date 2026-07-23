@@ -5,11 +5,25 @@ const emptyForm = {
   nama_paket: '',
   deskripsi: '',
   diskon_persen: '',
+  tanggal_mulai: '',
   tanggal_berakhir: '',
   status_promo: 'Tidak Aktif',
   layanan_ids: [],
   gambar_promo: null,
 };
+
+function parseCustomDate(tanggal) {
+  if (!tanggal) return '';
+  if (typeof tanggal === 'string' && tanggal.includes(':')) {
+    const [yy, mm, dd] = tanggal.split(':');
+    return `20${yy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
+  }
+  // Ambil hanya format YYYY-MM-DD jika formatnya ISO String (e.g., 2026-07-21T00:00:00)
+  if (typeof tanggal === 'string' && tanggal.includes('T')) {
+    return tanggal.split('T')[0];
+  }
+  return tanggal;
+}
 
 function normalizeSelectedIds(initialData) {
   if (!initialData) return [];
@@ -49,15 +63,15 @@ export default function PromoForm({ initialData, onSubmit, submitting, mode }) {
 
     loadLayanan();
   }, []);
-  
 
   useEffect(() => {
     if (initialData) {
-      let tanggal = initialData.tanggal_berakhir ?? initialData.tanggalBerakhir ?? '';
-      if (typeof tanggal === 'string' && tanggal.includes(':')) {
-        const [yy, mm, dd] = tanggal.split(':');
-        tanggal = `20${yy}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
-      }
+      const tglMulai = parseCustomDate(
+        initialData.tanggal_mulai ?? initialData.tanggalMulai ?? ''
+      );
+      const tglBerakhir = parseCustomDate(
+        initialData.tanggal_berakhir ?? initialData.tanggalBerakhir ?? ''
+      );
 
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({
@@ -65,7 +79,8 @@ export default function PromoForm({ initialData, onSubmit, submitting, mode }) {
         nama_paket: initialData.nama_paket ?? initialData.nama ?? initialData.kode_promo ?? '',
         deskripsi: initialData.deskripsi ?? initialData.deskripsi_layanan ?? initialData.deskripsiLayanan ?? '',
         diskon_persen: initialData.diskon_persen ?? initialData.potongan_harga ?? initialData.potonganHarga ?? '',
-        tanggal_berakhir: tanggal,
+        tanggal_mulai: tglMulai,
+        tanggal_berakhir: tglBerakhir,
         status_promo: initialData.status_promo ?? initialData.status ?? 'Tidak Aktif',
         layanan_ids: normalizeSelectedIds(initialData),
       });
@@ -80,7 +95,7 @@ export default function PromoForm({ initialData, onSubmit, submitting, mode }) {
     setForm((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: '' }));
   }
-  
+
   function handleFileChange(e) {
     if (e.target.files && e.target.files[0]) {
       setImage(e.target.files[0]);
@@ -108,7 +123,21 @@ export default function PromoForm({ initialData, onSubmit, submitting, mode }) {
       newErrors.diskon_persen = 'Diskon harus di antara 0 sampai 100';
     }
 
-    if (!String(form.tanggal_berakhir).trim()) newErrors.tanggal_berakhir = 'Tanggal berakhir wajib diisi';
+    if (!String(form.tanggal_mulai).trim()) {
+      newErrors.tanggal_mulai = 'Tanggal mulai wajib diisi';
+    }
+
+    if (!String(form.tanggal_berakhir).trim()) {
+      newErrors.tanggal_berakhir = 'Tanggal berakhir wajib diisi';
+    }
+
+    // Validasi perbandingan tanggal
+    if (form.tanggal_mulai && form.tanggal_berakhir) {
+      if (new Date(form.tanggal_mulai) > new Date(form.tanggal_berakhir)) {
+        newErrors.tanggal_berakhir = 'Tanggal berakhir harus setelah atau sama dengan tanggal mulai';
+      }
+    }
+
     if (!Array.isArray(form.layanan_ids) || form.layanan_ids.length === 0) {
       newErrors.layanan_ids = 'Pilih minimal 1 layanan';
     }
@@ -131,7 +160,6 @@ export default function PromoForm({ initialData, onSubmit, submitting, mode }) {
       onSubmit={(e) => {
         e.preventDefault();
         if (validate()) {
-          // Kirim seluruh form termasuk file-nya
           onSubmit({
             ...form,
             diskon_persen: Number(form.diskon_persen),
@@ -155,7 +183,8 @@ export default function PromoForm({ initialData, onSubmit, submitting, mode }) {
           {errors.nama_paket && <span className="field-error">{errors.nama_paket}</span>}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        {/* Grid Diskon, Tanggal Mulai, dan Tanggal Berakhir */}
+        <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <label className="form-label">Diskon (%)</label>
             <input
@@ -169,6 +198,17 @@ export default function PromoForm({ initialData, onSubmit, submitting, mode }) {
               placeholder="10"
             />
             {errors.diskon_persen && <span className="field-error">{errors.diskon_persen}</span>}
+          </div>
+          <div>
+            <label className="form-label">Tanggal Mulai</label>
+            <input
+              type="date"
+              name="tanggal_mulai"
+              value={form.tanggal_mulai}
+              onChange={handleChange}
+              className="form-input"
+            />
+            {errors.tanggal_mulai && <span className="field-error">{errors.tanggal_mulai}</span>}
           </div>
           <div>
             <label className="form-label">Tanggal Berakhir</label>
@@ -196,21 +236,23 @@ export default function PromoForm({ initialData, onSubmit, submitting, mode }) {
           {errors.deskripsi && <span className="field-error">{errors.deskripsi}</span>}
         </div>
 
-        <div className="mt-6">
-        <label className="form-label">Gambar Promo</label>
-        <input 
-          type="file" 
-          accept="image/*" 
-          onChange={handleFileChange} 
-          className="form-input" 
-        />
-        {/* Preview jika ada initialData */}
-        {mode === 'edit' && initialData?.gambar_promo && !image && (
-          <p className="text-sm mt-2 text-slate-500">
-            Gambar saat ini: <a href={initialData.gambar_promo} target="_blank" className="text-blue-500">Lihat Gambar</a>
-          </p>
-        )}
-      </div>
+        <div>
+          <label className="form-label">Gambar Promo</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="form-input"
+          />
+          {mode === 'edit' && initialData?.gambar_promo && !image && (
+            <p className="mt-2 text-sm text-slate-500">
+              Gambar saat ini:{' '}
+              <a href={initialData.gambar_promo} target="_blank" rel="noreferrer" className="text-blue-500 underline">
+                Lihat Gambar
+              </a>
+            </p>
+          )}
+        </div>
 
         <div>
           <label className="form-label">Pilih Layanan</label>
@@ -251,7 +293,9 @@ export default function PromoForm({ initialData, onSubmit, submitting, mode }) {
                         <label
                           key={value}
                           className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
-                            checked ? 'border-primary bg-primary-light text-primary-dark' : 'border-slate-200 bg-white text-slate-700'
+                            checked
+                              ? 'border-primary bg-primary-light text-primary-dark'
+                              : 'border-slate-200 bg-white text-slate-700'
                           }`}
                         >
                           <input
@@ -272,7 +316,10 @@ export default function PromoForm({ initialData, onSubmit, submitting, mode }) {
             {selectedServices.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {selectedServices.map((item) => (
-                  <span key={item.id ?? item.id_layanan} className="rounded-full bg-primary-light px-3 py-1 text-xs font-medium text-primary-dark">
+                  <span
+                    key={item.id ?? item.id_layanan}
+                    className="rounded-full bg-primary-light px-3 py-1 text-xs font-medium text-primary-dark"
+                  >
                     {item.nama}
                   </span>
                 ))}
