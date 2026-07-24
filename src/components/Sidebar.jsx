@@ -1,6 +1,5 @@
 import { NavLink } from 'react-router-dom';
 import logo from '../assets/logo.png';
-import { FaStethoscope, FaGift, FaRegFileAlt, FaChartBar } from 'react-icons/fa';
 import { FaStethoscope, FaGift, FaRegFileAlt, FaChartBar, FaUserShield } from 'react-icons/fa';
 
 const menuItems = [
@@ -37,9 +36,6 @@ export default function Sidebar({ open, onClose }) {
       >
         <div className="flex flex-col items-start gap-1 bg-accent px-5 py-5 border-b border-slate-200">
           <img src={logo} alt="Smartcare" className="h-10 w-auto object-contain" />
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            CMS Admin
-          </div>
         </div>
 
         <nav className="flex flex-col gap-1 p-3">

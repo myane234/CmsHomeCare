@@ -19,15 +19,13 @@ export default function AdminSidebar({ open, onClose }) {
 
       <aside
         className={
-          'fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-200 md:static md:translate-x-0 ' +
-          (open ? 'translate-x-0' : '-translate-x-full')
+          'fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-shrink-0 flex-col bg-white transition-transform duration-200 md:sticky md:top-0 ' +
+          (open ? 'translate-x-0' : '-translate-x-full md:translate-x-0')
         }
       >
-        <div className="flex flex-col items-start gap-1 border-b border-slate-200 bg-accent px-5 py-5">
+        {/* Diubah dari bg-accent menjadi bg-white */}
+        <div className="flex flex-col items-start gap-1 bg-white px-5 py-5">
           <img src={logo} alt="Smartcare" className="h-10 w-auto object-contain" />
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            CMS Admin
-          </div>
         </div>
 
         <nav className="flex flex-col gap-1 p-3">

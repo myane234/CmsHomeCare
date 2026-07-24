@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
+import Pagination from '../../components/pagination'; // <- Import komponen Pagination
 
 const nakesData = [
   { id: 1, foto: '/nakesgambar.jpg', nama: 'Dr. Anisa Rahma', jenis: 'Pergantian Alat Medis', nomorStr: 'STR-2024001', lulusan: 'Poltekkes Kemenkes Jakarta', status: 'Selesai', dokumenPdf: '/Ijazah-Jokowi.jpg' },
@@ -14,12 +15,20 @@ const filterOptions = ['Semua', 'Pending', 'Pelatihan', 'Selesai'];
 export default function DataNakes() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('Semua');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 2;
 
+  // Logika Filter & Pencarian
   const filteredNakes = nakesData.filter((item) => {
     const matchesSearch = `${item.nama} ${item.jenis} ${item.nomorStr}`.toLowerCase().includes(search.toLowerCase());
     const matchesFilter = filter === 'Semua' || item.status === filter;
     return matchesSearch && matchesFilter;
   });
+
+  // Logika Pagination
+  const totalPages = Math.max(Math.ceil(filteredNakes.length / itemsPerPage), 1);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = filteredNakes.slice(startIndex, startIndex + itemsPerPage);
 
   return (
     <div>
@@ -34,7 +43,10 @@ export default function DataNakes() {
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1); // Reset ke halaman 1 saat mencari
+            }}
             placeholder="Cari nama atau jenis nakes"
             className="w-full bg-transparent outline-none"
           />
@@ -45,11 +57,15 @@ export default function DataNakes() {
             <button
               key={option}
               type="button"
-              onClick={() => setFilter(option)}
-              className={`rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${filter === option
-                ? 'bg-primary text-white'
-                : 'border border-slate-200 bg-white text-slate-600 hover:border-primary hover:text-primary'
-                }`}
+              onClick={() => {
+                setFilter(option);
+                setCurrentPage(1); // Reset ke halaman 1 saat mengubah filter
+              }}
+              className={`rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
+                filter === option
+                  ? 'bg-primary text-white'
+                  : 'border border-slate-200 bg-white text-slate-600 hover:border-primary hover:text-primary'
+              }`}
             >
               {option}
             </button>
@@ -79,33 +95,65 @@ export default function DataNakes() {
               </tr>
             </thead>
             <tbody>
-              {filteredNakes.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50">
-                  <td className="border-b border-slate-200 px-4 py-3 text-sm">
-                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-lg">
-                      <img src={item.foto} alt={item.nama} className="h-full w-full object-cover" />
-                    </div>
-                  </td>
-                  <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.nama}</td>
-                  <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.jenis}</td>
-                  <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.nomorStr}</td>
-                  <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.lulusan}</td>
-                  <td className="border-b border-slate-200 px-4 py-3 text-sm">
-                    <span className={`badge ${item.status === 'Selesai' ? 'badge-aktif' : item.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="border-b border-slate-200 px-4 py-3 text-sm">
-                    <a href={item.dokumenPdf} target="_blank" rel="noopener noreferrer" className="btn-outline btn-sm inline-flex items-center justify-center text-center">
-                      Lihat Dokumen
-                    </a>
+              {paginatedData.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="px-4 py-8 text-center text-sm text-slate-500">
+                    Tidak ada data nakes yang ditemukan.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                paginatedData.map((item) => (
+                  <tr key={item.id} className="hover:bg-slate-50">
+                    <td className="border-b border-slate-200 px-4 py-3 text-sm">
+                      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-lg">
+                        <img src={item.foto} alt={item.nama} className="h-full w-full object-cover" />
+                      </div>
+                    </td>
+                    <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.nama}</td>
+                    <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.jenis}</td>
+                    <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.nomorStr}</td>
+                    <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.lulusan}</td>
+                    <td className="border-b border-slate-200 px-4 py-3 text-sm">
+                      <span className={`badge ${item.status === 'Selesai' ? 'badge-aktif' : item.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="border-b border-slate-200 px-4 py-3 text-sm">
+                      <a href={item.dokumenPdf} target="_blank" rel="noopener noreferrer" className="btn-outline btn-sm inline-flex items-center justify-center text-center">
+                        Lihat Dokumen
+                      </a>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
+
+        {/* Informasi Jumlah Data */}
+        {filteredNakes.length > 0 && (
+          <div className="border-t border-slate-200 bg-white px-4 py-3.5 sm:px-6">
+            <p className="text-sm text-slate-500">
+              Menampilkan <span className="font-medium">{startIndex + 1}</span> sampai{' '}
+              <span className="font-semibold">
+                {Math.min(currentPage * itemsPerPage, filteredNakes.length)}
+              </span>{' '}
+              dari <span className="font-medium">{filteredNakes.length}</span> data
+            </p>
+          </div>
+        )}
       </div>
+
+      {/* Komponen Pagination Terpisah */}
+      {filteredNakes.length > 0 && totalPages > 1 && (
+        <div className="mt-4">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
+        </div>
+      )}
     </div>
   );
 }
