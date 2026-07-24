@@ -28,7 +28,7 @@ export default function LoginAdminCms() {
     const result = await login(form.email, form.password);
     setLoading(false);
     if (result.success) {
-      navigate('/admindashboard', { replace: true });
+      navigate('/dashboard', { replace: true });
     } else {
       setError(result.message);
     }

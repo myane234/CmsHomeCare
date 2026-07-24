@@ -24,6 +24,7 @@ function App() {
       {/* Public routes */}
       <Route path="/login" element={<LoginAdminCms />} />
       <Route path="/super-admin/login" element={<LoginSuperAdmin />} />
+      <Route path="/admindashboard" element={<Navigate to="/dashboard" replace />} />
 
       <Route
         element={
