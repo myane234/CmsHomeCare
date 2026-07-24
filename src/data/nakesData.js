@@ -18,7 +18,7 @@ function extractData(body) {
 }
 
 export async function getAllActiveNakes() {
-  const res = await fetch(`${URL}/admin/nakes`, {
+  const res = await fetch(`${URL}/super-admin/nakes`, {
     method: 'GET',
     headers: getAuthHeaders({
       'Content-Type': 'application/json',
@@ -29,4 +29,31 @@ export async function getAllActiveNakes() {
   const json = await parseJsonResponse(res);
   const data = extractData(json);
   return Array.isArray(data) ? data : (data ? [data] : []);
+}
+
+export async function getKategoriLayanan() {
+  const res = await fetch(`${URL}/layanan/kategori`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+  });
+
+  const json = await parseJsonResponse(res);
+  const data = extractData(json);
+  return Array.isArray(data) ? data : (data ? [data] : []);
+}
+
+export async function updateNakesData(id, formData) {
+  // Use FormData because we might upload a file
+  const res = await fetch(`${URL}/super-admin/nakes/${id}`, {
+    method: 'POST', // POST with _method=PUT to handle multipart/form-data
+    headers: getAuthHeaders({
+        'Accept': 'application/json',
+    }),
+    body: formData,
+  });
+
+  return await parseJsonResponse(res);
 }

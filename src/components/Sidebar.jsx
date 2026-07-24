@@ -5,7 +5,6 @@ import { isSuperAdmin } from '../utils/role';
 
 const menuItems = [
   { to: '/dashboard', label: 'Dashboard', icon: <FaChartBar /> },
-  { to: '/admin/dashboard', label: 'Admin Dashboard', icon: <FaUserShield /> }, // MENU BARU
   { to: '/layanan', label: 'Layanan', icon: <FaStethoscope /> },
   { to: '/promo', label: 'Promo', icon: <FaGift /> },
   { to: '/artikel', label: 'Artikel', icon: <FaRegFileAlt /> },
@@ -57,6 +56,16 @@ export default function Sidebar({ open, onClose }) {
             </NavLink>
           ))}
         </nav>
+
+        <div className="mt-auto p-4 border-t border-slate-200">
+          <a
+            href="/super-admin/login"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary-light px-4 py-2.5 text-sm font-bold text-primary-dark hover:bg-primary hover:text-white transition-colors"
+          >
+            <FaUserShield />
+            Login Super Admin
+          </a>
+        </div>
       </aside>
     </>
   );

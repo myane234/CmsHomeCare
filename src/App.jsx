@@ -18,6 +18,15 @@ import PageNakesRequest from './pages/PageNakesRequest';
 import AdminLayout from './components/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import KelolaAdmin from './pages/KelolaAdmin';
+import { getUserRoles } from './utils/role';
+
+function RootRedirect() {
+  const userRoles = getUserRoles();
+  if (userRoles.includes('super_admin')) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+  return <Navigate to="/dashboard" replace />;
+}
 
 function App() {
   return (
@@ -25,25 +34,23 @@ function App() {
       {/* Public routes */}
       <Route path="/login" element={<LoginAdminCms />} />
       <Route path="/super-admin/login" element={<LoginSuperAdmin />} />
-      <Route path="/admindashboard" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/admindashboard" element={<RootRedirect />} />
 
+      {/* Admin Biasa only routes */}
       <Route
         element={
-          <ProtectedRoute>
+          <ProtectedRoute excludeSuperAdmin={true}>
             <AdminLayout />
           </ProtectedRoute>
         }
       >
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/nakes" element={<DataNakes />} />
-        <Route path="/admin/nakes/requests" element={<PageNakesRequest />} />
         <Route path="/layanan" element={<PageLayanan />} />
+        <Route path="/layanan/tambah" element={<FormTambah />} />
+        <Route path="/layanan/:id/edit" element={<FormEdit />} />
         <Route path="/promo" element={<PagePromo />} />
         <Route path="/promo/tambah" element={<PromoTambah />} />
         <Route path="/promo/:id_promo/edit" element={<PromoEdit />} />
-        <Route path="/layanan/tambah" element={<FormTambah />} />
-        <Route path="/layanan/:id/edit" element={<FormEdit />} />
         <Route path="/artikel" element={<PageArtikel />} />
         <Route path="/artikel/tambah" element={<FormTambahArtikel />} />
         <Route path="/artikel/:id/edit" element={<FormEditArtikel />} />
@@ -57,12 +64,15 @@ function App() {
           </ProtectedRoute>
         }
       >
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/nakes" element={<DataNakes />} />
+        <Route path="/admin/nakes/requests" element={<PageNakesRequest />} />
         <Route path="/kelola-admin" element={<KelolaAdmin />} />
       </Route>
 
       {/* Default redirect */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<RootRedirect />} />
+      <Route path="*" element={<RootRedirect />} />
     </Routes>
   );
 }

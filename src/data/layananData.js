@@ -38,7 +38,7 @@ function mapApiItem(item) {
 function toFormData(item) {
   const fd = new FormData();
   fd.append('nama_layanan', item.nama ?? '');
-  fd.append('kategori_layanan', item.kategori ?? '');
+  fd.append('id_kategori_layanan', item.kategori ?? '');
   fd.append('harga', item.harga ?? 0);
   fd.append('tipe_layanan', item.tipe_layanan ?? 'tindakan');
   if (item.tipe_layanan === 'durasi') {

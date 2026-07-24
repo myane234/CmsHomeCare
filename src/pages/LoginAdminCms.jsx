@@ -25,10 +25,15 @@ export default function LoginAdminCms() {
     }
 
     setLoading(true);
-    const result = await login(form.email, form.password);
+    const isSuperAdminPath = window.location.pathname.includes('super-admin');
+    const result = await login(form.email, form.password, isSuperAdminPath);
     setLoading(false);
     if (result.success) {
-      navigate('/dashboard', { replace: true });
+      if (result.roles?.includes('super_admin')) {
+        navigate('/admin/dashboard', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     } else {
       setError(result.message);
     }
@@ -89,8 +94,21 @@ export default function LoginAdminCms() {
         </form>
 
         <p className="mt-5 text-center text-[11px] text-slate-500">
-          Demo: admin@smarthomecare.com / admin123
+          Super Admin: admin@gmail.com / faruqganteng<br/>
+          Admin: faruq@homecare.com / faruqganteng
         </p>
+
+        <div className="mt-6 border-t border-slate-200 pt-5 text-center">
+          {window.location.pathname.includes('super-admin') ? (
+            <a href="/login" className="text-sm font-medium text-primary hover:underline">
+              ← Kembali ke Login Admin Biasa
+            </a>
+          ) : (
+            <a href="/super-admin/login" className="text-sm font-medium text-primary hover:underline">
+              Masuk sebagai Super Admin →
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );

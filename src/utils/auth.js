@@ -2,9 +2,10 @@ import { URL } from './getUrl.js';
 
 const AUTH_KEY = 'cmsHomeCare_auth';
 
-export async function login(email, password) {
+export async function login(email, password, isSuperAdminPath = false) {
   try {
-    const res = await fetch(`${URL}/admin/login`, {
+    const endpoint = isSuperAdminPath ? '/super-admin/login' : '/admin/login';
+    const res = await fetch(`${URL}${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -24,6 +25,10 @@ export async function login(email, password) {
         roles = []; 
       }
 
+      if (body.data.tier_admin === 'Super Admin' && !roles.includes('super_admin')) {
+        roles.push('super_admin');
+      }
+
       const session = {
         token: body.data.token,
         email,
@@ -34,7 +39,7 @@ export async function login(email, password) {
       localStorage.setItem(AUTH_KEY, JSON.stringify(session));
       console.log(' Session saved:', JSON.stringify(session, null, 2));
       console.log(' Is Super Admin?', roles.includes('super_admin'));
-      return { success: true };
+      return { success: true, roles: session.roles };
     }
     
     return { success: false, message: body.message || 'Email atau password salah' };

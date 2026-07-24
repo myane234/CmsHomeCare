@@ -10,7 +10,7 @@ import { getUserRoles } from '../utils/role';
  * - requiredRole (optional): Role yang dibutuhkan (misal 'super_admin').
  *   Jika diberikan, user harus memiliki role tersebut untuk mengakses.
  */
-export default function ProtectedRoute({ children, requiredRole }) {
+export default function ProtectedRoute({ children, requiredRole, excludeSuperAdmin }) {
   // Cek login dulu
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
@@ -20,8 +20,16 @@ export default function ProtectedRoute({ children, requiredRole }) {
   if (requiredRole) {
     const userRoles = getUserRoles();
     if (!userRoles.includes(requiredRole)) {
-      // Redirect ke dashboard jika user tidak punya akses
+      // Redirect ke dashboard biasa jika user tidak punya akses
       return <Navigate to="/dashboard" replace />;
+    }
+  }
+
+  // Jika ini khusus admin biasa (excludeSuperAdmin = true), tolak super_admin
+  if (excludeSuperAdmin) {
+    const userRoles = getUserRoles();
+    if (userRoles.includes('super_admin')) {
+      return <Navigate to="/admin/dashboard" replace />;
     }
   }
 

@@ -26,7 +26,7 @@ export default function LayananForm({ initialData, onSubmit, submitting, mode })
         
         // Jika sedang tambah data baru (bukan edit), otomatis pasang opsi pertama sebagai default
         if (!initialData && data.length > 0) {
-          setForm((prev) => ({ ...prev, kategori: data[0] }));
+          setForm((prev) => ({ ...prev, kategori: data[0].id_kategori_layanan }));
         }
       } catch (err) {
         console.error('Gagal memuat kategori layanan:', err);
@@ -108,8 +108,8 @@ export default function LayananForm({ initialData, onSubmit, submitting, mode })
               <option value="">Memuat kategori...</option>
             ) : (
               kategoriOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
+                <option key={opt.id_kategori_layanan} value={opt.id_kategori_layanan}>
+                  {opt.nama_kategori}
                 </option>
               ))
             )}

@@ -1,55 +1,128 @@
 import { useState, useEffect } from 'react';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaEdit } from 'react-icons/fa';
 import Pagination from '../../components/pagination';
-import { getAllActiveNakes } from '../../data/nakesData';
+import { getAllActiveNakes, getKategoriLayanan, updateNakesData } from '../../data/nakesData';
 import { getImageUrl } from '../../data/imageHelper';
+import Swal from 'sweetalert2';
 
-const filterOptions = ['Semua', 'Selesai'];
+const wilayahOptions = [
+  'Aceh', 'Sumatera Utara', 'Sumatera Barat', 'Riau', 'Kepulauan Riau', 'Jambi', 'Bengkulu', 'Sumatera Selatan', 'Kepulauan Bangka Belitung', 'Lampung',
+  'DKI Jakarta', 'Jawa Barat', 'Banten', 'Jawa Tengah', 'Daerah Istimewa Yogyakarta', 'Jawa Timur',
+  'Bali', 'Nusa Tenggara Barat', 'Nusa Tenggara Timur',
+  'Kalimantan Barat', 'Kalimantan Tengah', 'Kalimantan Selatan', 'Kalimantan Timur', 'Kalimantan Utara',
+  'Sulawesi Utara', 'Gorontalo', 'Sulawesi Tengah', 'Sulawesi Barat', 'Sulawesi Selatan', 'Sulawesi Tenggara',
+  'Maluku', 'Maluku Utara',
+  'Papua', 'Papua Barat', 'Papua Selatan', 'Papua Tengah', 'Papua Pegunungan', 'Papua Barat Daya'
+];
 
 export default function DataNakes() {
   const [nakesList, setNakesList] = useState([]);
+  const [kategoriList, setKategoriList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+  
+  // Filters
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('Semua');
+  const [filterKategori, setFilterKategori] = useState('');
+  const [filterWilayah, setFilterWilayah] = useState('');
+  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  useEffect(() => {
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedNakes, setSelectedNakes] = useState(null);
+  const [formKategori, setFormKategori] = useState([]);
+  const [formWilayah, setFormWilayah] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchData = () => {
     setLoading(true);
     setErrorMsg('');
-    getAllActiveNakes()
-      .then((data) => {
-        const mapped = data.map((item) => ({
+    Promise.all([getAllActiveNakes(), getKategoriLayanan()])
+      .then(([nakesData, kategoriData]) => {
+        setKategoriList(kategoriData);
+        const mapped = nakesData.map((item) => ({
           id: item.id_tenaga_medis ?? item.id,
           foto: item.foto_profile ?? '/nakesgambar.jpg',
           nama: item.nama_lengkap ?? '',
           jenis: item.jenis_tenaga_medis ?? '',
           nomorStr: item.no_str ?? '',
           lulusan: item.lulusan ?? '',
-          status: 'Selesai', // active health workers are marked as 'Selesai' (approved)
+          status: 'Selesai',
           dokumenPdf: item.foto_profile ?? '/nakesgambar.jpg',
+          kategoriLayanan: item.kategori_layanan || [],
+          wilayahLayanan: item.wilayah_layanan || '',
         }));
         setNakesList(mapped);
       })
       .catch((err) => {
-        setErrorMsg(err.message || 'Gagal memuat data tenaga medis');
+        setErrorMsg(err.message || 'Gagal memuat data');
       })
       .finally(() => {
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
-  // Logika Filter & Pencarian
+  const handleEditClick = (nakes) => {
+    setSelectedNakes(nakes);
+    setFormKategori(nakes.kategoriLayanan.map(k => k.id_kategori_layanan));
+    setFormWilayah(nakes.wilayahLayanan || '');
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedNakes(null);
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    const formData = new FormData();
+    formData.append('_method', 'PUT');
+    if (formWilayah) formData.append('wilayah_layanan', formWilayah);
+    
+    formKategori.forEach((katId, index) => {
+      formData.append(`kategori_layanan[${index}]`, katId);
+    });
+
+    try {
+      await updateNakesData(selectedNakes.id, formData);
+      Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data Nakes diperbarui!' });
+      setIsModalOpen(false);
+      fetchData();
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: 'Gagal', text: err.message || 'Gagal memperbarui data' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const toggleKategoriSelection = (katId) => {
+    if (formKategori.includes(katId)) {
+      setFormKategori(formKategori.filter(id => id !== katId));
+    } else {
+      setFormKategori([...formKategori, katId]);
+    }
+  };
+
   const filteredNakes = nakesList.filter((item) => {
     const matchesSearch = `${item.nama} ${item.jenis} ${item.nomorStr}`
       .toLowerCase()
       .includes(search.toLowerCase());
-    const matchesFilter = filter === 'Semua' || item.status === filter;
-    return matchesSearch && matchesFilter;
+      
+    const matchesKategori = filterKategori === '' || item.kategoriLayanan.some(k => k.id_kategori_layanan.toString() === filterKategori);
+    const matchesWilayah = filterWilayah === '' || item.wilayahLayanan === filterWilayah;
+    
+    return matchesSearch && matchesKategori && matchesWilayah;
   });
 
-  // Logika Pagination
   const totalPages = Math.max(Math.ceil(filteredNakes.length / itemsPerPage), 1);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedData = filteredNakes.slice(startIndex, startIndex + itemsPerPage);
@@ -58,42 +131,43 @@ export default function DataNakes() {
     <div>
       <div className="mb-6">
         <h1 className="page-title">Data Nakes</h1>
-        <p className="page-subtitle">Kelola data tenaga medis yang terdaftar di SmartHomeCare.</p>
+        <p className="page-subtitle">Kelola data tenaga medis, kategori layanan, dan wilayah operasional.</p>
       </div>
 
-      <div className="mb-5 flex flex-col gap-3 rounded-card border border-slate-200 bg-white p-4 shadow-card md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-500 w-full sm:max-w-[360px]">
-          <FaSearch />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(1); // Reset ke halaman 1 saat mencari
-            }}
-            placeholder="Cari nama, jenis nakes, atau STR..."
-            className="w-full bg-transparent outline-none"
-          />
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {filterOptions.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => {
-                setFilter(option);
-                setCurrentPage(1); // Reset ke halaman 1 saat mengubah filter
-              }}
-              className={`rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
-                filter === option
-                  ? 'bg-primary text-white'
-                  : 'border border-slate-200 bg-white text-slate-600 hover:border-primary hover:text-primary'
-              }`}
-            >
-              {option}
-            </button>
-          ))}
+      <div className="mb-5 flex flex-col gap-4 rounded-card border border-slate-200 bg-white p-4 shadow-card">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-500 flex-grow">
+            <FaSearch />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+              placeholder="Cari nama, jenis nakes, atau STR..."
+              className="w-full bg-transparent outline-none"
+            />
+          </div>
+          
+          <select 
+            className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none"
+            value={filterKategori}
+            onChange={(e) => { setFilterKategori(e.target.value); setCurrentPage(1); }}
+          >
+            <option value="">Semua Kategori</option>
+            {kategoriList.map(kat => (
+              <option key={kat.id_kategori_layanan} value={kat.id_kategori_layanan}>{kat.nama_kategori}</option>
+            ))}
+          </select>
+          
+          <select 
+            className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none"
+            value={filterWilayah}
+            onChange={(e) => { setFilterWilayah(e.target.value); setCurrentPage(1); }}
+          >
+            <option value="">Semua Wilayah</option>
+            {wilayahOptions.map(wil => (
+              <option key={wil} value={wil}>{wil}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -104,13 +178,6 @@ export default function DataNakes() {
       )}
 
       <div className="card overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
-          <h2 className="text-base font-bold">Daftar Nakes</h2>
-          <span className="rounded-full bg-primary-light px-3 py-1 text-xs font-semibold text-primary-dark">
-            {filteredNakes.length} data
-          </span>
-        </div>
-
         <div className="overflow-x-auto">
           {loading ? (
             <p className="p-10 text-center text-sm text-slate-500">Memuat data...</p>
@@ -118,55 +185,47 @@ export default function DataNakes() {
             <table className="w-full min-w-225 border-collapse">
               <thead>
                 <tr>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Foto</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nama Lengkap</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Jenis Nakes</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nomor STR</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Lulusan</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Status</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Detail</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nakes</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Kategori Layanan</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Wilayah</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedData.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-4 py-8 text-center text-sm text-slate-500">
-                      Tidak ada data nakes yang ditemukan.
+                    <td colSpan="4" className="px-4 py-8 text-center text-sm text-slate-500">
+                      Tidak ada data yang ditemukan.
                     </td>
                   </tr>
                 ) : (
                   paginatedData.map((item) => (
                     <tr key={item.id} className="hover:bg-slate-50">
                       <td className="border-b border-slate-200 px-4 py-3 text-sm">
-                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-lg">
-                          <img
-                            src={getImageUrl(item.foto)}
-                            alt={item.nama}
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              e.target.src = '/nakesgambar.jpg';
-                            }}
-                          />
+                        <div className="flex items-center gap-3">
+                            <img src={getImageUrl(item.foto)} alt={item.nama} className="h-10 w-10 rounded-full object-cover bg-slate-200" onError={(e) => e.target.src = '/nakesgambar.jpg'} />
+                            <div>
+                                <div className="font-semibold text-slate-900">{item.nama}</div>
+                                <div className="text-xs text-slate-500">{item.jenis} - STR: {item.nomorStr}</div>
+                            </div>
                         </div>
                       </td>
-                      <td className="border-b border-slate-200 px-4 py-3 text-sm font-semibold text-slate-900">{item.nama}</td>
-                      <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.jenis}</td>
-                      <td className="border-b border-slate-200 px-4 py-3 text-sm font-mono">{item.nomorStr}</td>
-                      <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.lulusan}</td>
                       <td className="border-b border-slate-200 px-4 py-3 text-sm">
-                        <span className="badge badge-aktif">
-                          {item.status}
-                        </span>
+                        <div className="flex flex-wrap gap-1">
+                            {item.kategoriLayanan.length > 0 ? item.kategoriLayanan.map(k => (
+                                <span key={k.id_kategori_layanan} className="bg-primary-light text-primary-dark px-2 py-0.5 rounded text-xs">
+                                    {k.nama_kategori}
+                                </span>
+                            )) : <span className="text-slate-400 italic">Belum diatur</span>}
+                        </div>
                       </td>
                       <td className="border-b border-slate-200 px-4 py-3 text-sm">
-                        <a
-                          href={getImageUrl(item.dokumenPdf)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn-outline btn-sm inline-flex items-center justify-center text-center"
-                        >
-                          Lihat Dokumen
-                        </a>
+                        {item.wilayahLayanan || <span className="text-slate-400 italic">Belum diatur</span>}
+                      </td>
+                      <td className="border-b border-slate-200 px-4 py-3 text-sm">
+                        <button onClick={() => handleEditClick(item)} className="btn-outline btn-sm inline-flex items-center gap-2">
+                          <FaEdit /> Edit
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -175,29 +234,60 @@ export default function DataNakes() {
             </table>
           )}
         </div>
-
-        {/* Informasi Jumlah Data */}
+        
         {!loading && filteredNakes.length > 0 && (
           <div className="border-t border-slate-200 bg-white px-4 py-3.5 sm:px-6">
-            <p className="text-sm text-slate-500">
-              Menampilkan <span className="font-medium">{startIndex + 1}</span> sampai{' '}
-              <span className="font-semibold">
-                {Math.min(currentPage * itemsPerPage, filteredNakes.length)}
-              </span>{' '}
-              dari <span className="font-medium">{filteredNakes.length}</span> data
-            </p>
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
           </div>
         )}
       </div>
 
-      {/* Komponen Pagination Terpisah */}
-      {!loading && filteredNakes.length > 0 && totalPages > 1 && (
-        <div className="mt-4">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={(page) => setCurrentPage(page)}
-          />
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="mb-4 text-lg font-bold">Edit Kategori & Wilayah</h3>
+            <div className="mb-4 text-sm font-semibold text-slate-700">{selectedNakes?.nama} ({selectedNakes?.jenis})</div>
+            
+            <form onSubmit={handleFormSubmit}>
+              <div className="mb-4">
+                <label className="mb-2 block text-sm font-medium text-slate-700">Wilayah Operasional</label>
+                <select 
+                  className="w-full rounded-lg border border-slate-300 p-2.5 text-sm outline-none focus:border-primary"
+                  value={formWilayah}
+                  onChange={(e) => setFormWilayah(e.target.value)}
+                >
+                  <option value="">Pilih Wilayah</option>
+                  {wilayahOptions.map(wil => (
+                    <option key={wil} value={wil}>{wil}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-6">
+                <label className="mb-2 block text-sm font-medium text-slate-700">Kategori Layanan (Bisa pilih lebih dari satu)</label>
+                <div className="flex flex-wrap gap-2">
+                    {kategoriList.map(kat => (
+                        <div 
+                            key={kat.id_kategori_layanan} 
+                            onClick={() => toggleKategoriSelection(kat.id_kategori_layanan)}
+                            className={`cursor-pointer rounded-lg border px-3 py-1.5 text-sm transition-colors ${formKategori.includes(kat.id_kategori_layanan) ? 'border-primary bg-primary text-white' : 'border-slate-300 bg-white text-slate-600 hover:border-primary'}`}
+                        >
+                            {kat.nama_kategori}
+                        </div>
+                    ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={handleModalClose} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
+                  Batal
+                </button>
+                <button type="submit" disabled={isSubmitting} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark">
+                  {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
