@@ -10,7 +10,7 @@ export function getImageUrl(value) {
     return trimmed;
   }
 
-  const apiBase = URL === '/api' ? (import.meta.env.VITE_URLDEV || 'http://localhost:8000/api') : URL;
+  const apiBase = URL === '/api' ? (import.meta.env.VITE_URLDEV || 'https://citra.faaruq.com/api') : URL;
   const baseUrl = apiBase.replace(/\/api\/?$/, '');
   
   // Clean the path

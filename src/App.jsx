@@ -14,6 +14,7 @@ import PromoEdit from './pages/PromoEdit';
 import PageArtikel from './pages/PageArtikel';
 import FormTambahArtikel from './pages/FormTambahArtikel';
 import FormEditArtikel from './pages/FormEditArtikel';
+import PageNakesRequest from './pages/PageNakesRequest';
 import AdminLayout from './components/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import KelolaAdmin from './pages/KelolaAdmin';
@@ -36,6 +37,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/nakes" element={<DataNakes />} />
+        <Route path="/admin/nakes/requests" element={<PageNakesRequest />} />
         <Route path="/layanan" element={<PageLayanan />} />
         <Route path="/promo" element={<PagePromo />} />
         <Route path="/promo/tambah" element={<PromoTambah />} />

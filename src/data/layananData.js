@@ -11,7 +11,7 @@ function resolveImageUrl(value) {
     return trimmed
   }
 
-  const apiBase = URL === '/api' ? (import.meta.env.VITE_URLDEV || 'http://localhost:8000/api') : URL
+  const apiBase = URL === '/api' ? (import.meta.env.VITE_URLDEV || 'https://citra.faaruq.com/api') : URL
   const baseUrl = apiBase.replace(/\/api\/?$/, '')
   const fallbackOrigin = typeof window !== 'undefined' ? window.location.origin : ''
   const origin = baseUrl || fallbackOrigin

@@ -32,7 +32,11 @@ export default function AdminLayout() {
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
       {/* Sidebar Kiri */}
-      <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      {useAdminSidebar ? (
+        <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      ) : (
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      )}
 
       {/* Area Kanan (Header + Konten Utama) */}
       <div className="flex flex-1 flex-col overflow-y-auto">

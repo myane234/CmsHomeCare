@@ -1,26 +1,50 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaSearch } from 'react-icons/fa';
-import Pagination from '../../components/pagination'; // <- Import komponen Pagination
+import Pagination from '../../components/pagination';
+import { getAllActiveNakes } from '../../data/nakesData';
+import { getImageUrl } from '../../data/imageHelper';
 
-const nakesData = [
-  { id: 1, foto: '/nakesgambar.jpg', nama: 'Dr. Anisa Rahma', jenis: 'Pergantian Alat Medis', nomorStr: 'STR-2024001', lulusan: 'Poltekkes Kemenkes Jakarta', status: 'Selesai', dokumenPdf: '/Ijazah-Jokowi.jpg' },
-  { id: 2, foto: '/nakesgambar.jpg', nama: 'Siti Nurhaliza', jenis: 'Fisioterapi', nomorStr: 'STR-2024002', lulusan: 'Akademi Kebidanan Citra', status: 'Pelatihan', dokumenPdf: '/Ijazah-Jokowi.jpg' },
-  { id: 3, foto: '/nakesgambar.jpg', nama: 'Rizki Pratama', jenis: 'Fisioterapi', nomorStr: 'STR-2024003', lulusan: 'Universitas Brawijaya', status: 'Pending', dokumenPdf: '/Ijazah-Jokowi.jpg' },
-  { id: 4, foto: '/nakesgambar.jpg', nama: 'Dewi Sartika', jenis: 'Baby Nurse', nomorStr: 'STR-2024004', lulusan: 'STIKES Harapan Bangsa', status: 'Selesai', dokumenPdf: '/Ijazah-Jokowi.jpg' },
-  { id: 5, foto: '/nakesgambar.jpg', nama: 'Muhammad Farid', jenis: 'Baby Nurse', nomorStr: 'STR-2024005', lulusan: 'Poltekkes Kemenkes Surabaya', status: 'Pelatihan', dokumenPdf: '/Ijazah-Jokowi.jpg' },
-];
-
-const filterOptions = ['Semua', 'Pending', 'Pelatihan', 'Selesai'];
+const filterOptions = ['Semua', 'Selesai'];
 
 export default function DataNakes() {
+  const [nakesList, setNakesList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('Semua');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 2;
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setLoading(true);
+    setErrorMsg('');
+    getAllActiveNakes()
+      .then((data) => {
+        const mapped = data.map((item) => ({
+          id: item.id_tenaga_medis ?? item.id,
+          foto: item.foto_profile ?? '/nakesgambar.jpg',
+          nama: item.nama_lengkap ?? '',
+          jenis: item.jenis_tenaga_medis ?? '',
+          nomorStr: item.no_str ?? '',
+          lulusan: item.lulusan ?? '',
+          status: 'Selesai', // active health workers are marked as 'Selesai' (approved)
+          dokumenPdf: item.foto_profile ?? '/nakesgambar.jpg',
+        }));
+        setNakesList(mapped);
+      })
+      .catch((err) => {
+        setErrorMsg(err.message || 'Gagal memuat data tenaga medis');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
   // Logika Filter & Pencarian
-  const filteredNakes = nakesData.filter((item) => {
-    const matchesSearch = `${item.nama} ${item.jenis} ${item.nomorStr}`.toLowerCase().includes(search.toLowerCase());
+  const filteredNakes = nakesList.filter((item) => {
+    const matchesSearch = `${item.nama} ${item.jenis} ${item.nomorStr}`
+      .toLowerCase()
+      .includes(search.toLowerCase());
     const matchesFilter = filter === 'Semua' || item.status === filter;
     return matchesSearch && matchesFilter;
   });
@@ -38,7 +62,7 @@ export default function DataNakes() {
       </div>
 
       <div className="mb-5 flex flex-col gap-3 rounded-card border border-slate-200 bg-white p-4 shadow-card md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-500">
+        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-500 w-full sm:max-w-[360px]">
           <FaSearch />
           <input
             type="text"
@@ -47,7 +71,7 @@ export default function DataNakes() {
               setSearch(e.target.value);
               setCurrentPage(1); // Reset ke halaman 1 saat mencari
             }}
-            placeholder="Cari nama atau jenis nakes"
+            placeholder="Cari nama, jenis nakes, atau STR..."
             className="w-full bg-transparent outline-none"
           />
         </div>
@@ -73,6 +97,12 @@ export default function DataNakes() {
         </div>
       </div>
 
+      {errorMsg && (
+        <div className="mb-4 rounded-lg bg-danger-bg px-3.5 py-3 text-sm text-danger">
+          {errorMsg}
+        </div>
+      )}
+
       <div className="card overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
           <h2 className="text-base font-bold">Daftar Nakes</h2>
@@ -82,56 +112,72 @@ export default function DataNakes() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-225 border-collapse">
-            <thead>
-              <tr>
-                <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Foto</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nama Lengkap</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Jenis Nakes</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nomor STR</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Lulusan</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Status</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Detail</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 ? (
+          {loading ? (
+            <p className="p-10 text-center text-sm text-slate-500">Memuat data...</p>
+          ) : (
+            <table className="w-full min-w-225 border-collapse">
+              <thead>
                 <tr>
-                  <td colSpan="7" className="px-4 py-8 text-center text-sm text-slate-500">
-                    Tidak ada data nakes yang ditemukan.
-                  </td>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Foto</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nama Lengkap</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Jenis Nakes</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nomor STR</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Lulusan</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Status</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Detail</th>
                 </tr>
-              ) : (
-                paginatedData.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50">
-                    <td className="border-b border-slate-200 px-4 py-3 text-sm">
-                      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-lg">
-                        <img src={item.foto} alt={item.nama} className="h-full w-full object-cover" />
-                      </div>
-                    </td>
-                    <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.nama}</td>
-                    <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.jenis}</td>
-                    <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.nomorStr}</td>
-                    <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.lulusan}</td>
-                    <td className="border-b border-slate-200 px-4 py-3 text-sm">
-                      <span className={`badge ${item.status === 'Selesai' ? 'badge-aktif' : item.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
-                        {item.status}
-                      </span>
-                    </td>
-                    <td className="border-b border-slate-200 px-4 py-3 text-sm">
-                      <a href={item.dokumenPdf} target="_blank" rel="noopener noreferrer" className="btn-outline btn-sm inline-flex items-center justify-center text-center">
-                        Lihat Dokumen
-                      </a>
+              </thead>
+              <tbody>
+                {paginatedData.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="px-4 py-8 text-center text-sm text-slate-500">
+                      Tidak ada data nakes yang ditemukan.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  paginatedData.map((item) => (
+                    <tr key={item.id} className="hover:bg-slate-50">
+                      <td className="border-b border-slate-200 px-4 py-3 text-sm">
+                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-lg">
+                          <img
+                            src={getImageUrl(item.foto)}
+                            alt={item.nama}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              e.target.src = '/nakesgambar.jpg';
+                            }}
+                          />
+                        </div>
+                      </td>
+                      <td className="border-b border-slate-200 px-4 py-3 text-sm font-semibold text-slate-900">{item.nama}</td>
+                      <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.jenis}</td>
+                      <td className="border-b border-slate-200 px-4 py-3 text-sm font-mono">{item.nomorStr}</td>
+                      <td className="border-b border-slate-200 px-4 py-3 text-sm">{item.lulusan}</td>
+                      <td className="border-b border-slate-200 px-4 py-3 text-sm">
+                        <span className="badge badge-aktif">
+                          {item.status}
+                        </span>
+                      </td>
+                      <td className="border-b border-slate-200 px-4 py-3 text-sm">
+                        <a
+                          href={getImageUrl(item.dokumenPdf)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-outline btn-sm inline-flex items-center justify-center text-center"
+                        >
+                          Lihat Dokumen
+                        </a>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
 
         {/* Informasi Jumlah Data */}
-        {filteredNakes.length > 0 && (
+        {!loading && filteredNakes.length > 0 && (
           <div className="border-t border-slate-200 bg-white px-4 py-3.5 sm:px-6">
             <p className="text-sm text-slate-500">
               Menampilkan <span className="font-medium">{startIndex + 1}</span> sampai{' '}
@@ -145,7 +191,7 @@ export default function DataNakes() {
       </div>
 
       {/* Komponen Pagination Terpisah */}
-      {filteredNakes.length > 0 && totalPages > 1 && (
+      {!loading && filteredNakes.length > 0 && totalPages > 1 && (
         <div className="mt-4">
           <Pagination
             currentPage={currentPage}
