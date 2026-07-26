@@ -57,6 +57,21 @@ export async function approveNakesRequest(id) {
   return extractData(json);
 }
 
+// 🟢 Tambahkan fungsi untuk status Pelatihan
+export async function pelatihanNakesRequest(id, adminNotes = '') {
+  const res = await fetch(`${URL}/admin/nakes/requests/${encodeURIComponent(id)}/pelatihan`, {
+    method: 'POST',
+    headers: getAuthHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    }),
+    body: JSON.stringify({ admin_notes: adminNotes }),
+  });
+
+  const json = await parseJsonResponse(res);
+  return extractData(json);
+}
+
 export async function rejectNakesRequest(id, adminNotes = '') {
   const res = await fetch(`${URL}/admin/nakes/requests/${encodeURIComponent(id)}/reject`, {
     method: 'POST',

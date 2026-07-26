@@ -26,25 +26,29 @@ export default function PageLayanan() {
 
   function loadData() {
     setLoading(true);
-    getAllLayanan().then((data) => {
-      setLayanan(data);
-      setLoading(false);
-    });
+    getAllLayanan()
+      .then((data) => {
+        setLayanan(data || []);
+      })
+      .catch((err) => console.error('Error fetching data:', err))
+      .finally(() => setLoading(false));
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1);
   }, [search]);
 
-  const filtered = layanan.filter((item) =>
-    (item.nama + item.kategori).toLowerCase().includes(search.toLowerCase())
-  );
+  // Logika Filter yang Aman dari Nilai Null/Undefined
+  const filtered = layanan.filter((item) => {
+    const nama = String(item.nama ?? '').toLowerCase();
+    const kategori = String(item.kategori ?? '').toLowerCase();
+    const query = search.toLowerCase();
+    return nama.includes(query) || kategori.includes(query);
+  });
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -52,20 +56,25 @@ export default function PageLayanan() {
 
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
-    setCurrentPage(1);
   };
 
   async function confirmDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
-    await deleteLayanan(deleteTarget.id);
-    setDeleting(false);
-    setDeleteTarget(null);
-    loadData();
+    try {
+      await deleteLayanan(deleteTarget.id);
+      loadData();
+      setDeleteTarget(null);
+    } catch (error) {
+      alert(error.message || 'Gagal menghapus data');
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
     <div>
+      {/* Header */}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="page-title">Layanan</h1>
@@ -76,6 +85,7 @@ export default function PageLayanan() {
         </Link>
       </div>
 
+      {/* Input Pencarian */}
       <div className="mb-4">
         <input
           type="text"
@@ -86,6 +96,7 @@ export default function PageLayanan() {
         />
       </div>
 
+      {/* Tabel Data */}
       <div className="card overflow-hidden">
         {loading ? (
           <p className="p-10 text-center text-sm text-slate-500">Memuat data...</p>
@@ -127,10 +138,10 @@ export default function PageLayanan() {
                         </div>
                       )}
                     </td>
-                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.nama}</td>
-                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.kategori}</td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.nama ?? '-'}</td>
+                    <td className="border-b border-slate-200 px-4 py-3.5 text-sm">{item.kategori ?? '-'}</td>
                     <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
-                      Rp {Number(item.harga).toLocaleString('id-ID')}
+                      Rp {Number(item.harga || 0).toLocaleString('id-ID')}
                     </td>
                     <td className="border-b border-slate-200 px-4 py-3.5 text-sm capitalize">
                       {item.tipe_layanan || 'Tindakan'}
@@ -164,82 +175,32 @@ export default function PageLayanan() {
           </div>
         )}
 
-        {/* Pagination Controls */}
-        {!loading && filtered.length > 0 && totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-3.5 sm:px-6">
-            <div className="flex flex-1 justify-between sm:hidden">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="btn-outline btn-sm"
-              >
-                Sebelumnya
-              </button>
-              <button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="btn-outline btn-sm"
-              >
-                Selanjutnya
-              </button>
-            </div>
-            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-slate-500">
-                  Menampilkan <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> sampai{' '}
-                  <span className="font-semibold">
-                    {Math.min(currentPage * itemsPerPage, filtered.length)}
-                  </span>{' '}
-                  dari <span className="font-semibold">{filtered.length}</span> data
-                </p>
-              </div>
-              <div>
-                <nav className="isolate inline-flex -space-x-px rounded-md shadow-xs" aria-label="Pagination">
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center rounded-l-md px-2.5 py-1.5 text-sm font-semibold text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Sebelumnya
-                  </button>
-                  {Array.from({ length: totalPages }, (_, idx) => {
-                    const pageNum = idx + 1;
-                    const isCurrent = pageNum === currentPage;
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`relative inline-flex items-center px-3 py-1.5 text-sm font-semibold border ${
-                          isCurrent
-                            ? 'z-10 bg-primary text-white border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
-                            : 'text-slate-950 border-slate-200 bg-white hover:bg-slate-50'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center rounded-r-md px-2.5 py-1.5 text-sm font-semibold text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Selanjutnya
-                  </button>
-                </nav>
-              </div>
-            </div>
+        {/* Info Jumlah Data di Bawah Kartu */}
+        {!loading && filtered.length > 0 && (
+          <div className="border-t border-slate-200 bg-white px-4 py-3.5 sm:px-6">
+            <p className="text-sm text-slate-500">
+              Menampilkan <span className="font-medium">{startIndex + 1}</span> sampai{' '}
+              <span className="font-semibold">
+                {Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)}
+              </span>{' '}
+              dari <span className="font-semibold">{filtered.length}</span> data
+            </p>
           </div>
         )}
       </div>
 
-      {/* Pagination */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={(page) => setCurrentPage(page)}
-      />
+      {/* Komponen Pagination Navigasi Halaman */}
+      {!loading && filtered.length > 0 && totalPages > 1 && (
+        <div className="mt-4">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
+        </div>
+      )}
 
+      {/* Modal Konfirmasi Hapus */}
       {deleteTarget && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-5"

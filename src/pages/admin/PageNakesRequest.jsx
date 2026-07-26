@@ -2,23 +2,27 @@ import { useEffect, useState } from 'react';
 import {
   getAllNakesRequests,
   approveNakesRequest,
+  pelatihanNakesRequest,
   rejectNakesRequest,
-} from '../data/nakesRequestData';
-import { getImageUrl } from '../data/imageHelper';
+} from '../../data/nakesRequestData';
+import { getImageUrl } from '../../data/imageHelper';
 
 export default function PageNakesRequest() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all'); // State untuk filter status
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [wilayahFilter, setWilayahFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   // Modals state
-  const [approveTarget, setApproveTarget] = useState(null);
+  const [pelatihanTarget, setPelatihanTarget] = useState(null); // Step 1: Lanjut ke Pelatihan
+  const [approveTarget, setApproveTarget] = useState(null);     // Step 2: Setujui Akun Final
   const [rejectTarget, setRejectTarget] = useState(null);
   const [detailTarget, setDetailTarget] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
   const [adminNotes, setAdminNotes] = useState('');
   const [processing, setProcessing] = useState(false);
 
@@ -38,16 +42,27 @@ export default function PageNakesRequest() {
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1);
-  }, [search, statusFilter]);
+  }, [search, statusFilter, wilayahFilter]);
 
-  // Logika Filter (Pencarian & Status)
+  // Ekstraksi daftar Wilayah Layanan secara Unik
+  const listWilayah = Array.from(
+    new Map(
+      requests
+        .filter((item) => item.id_wilayah_layanan || item.wilayah_layanan)
+        .map((item) => {
+          const id = item.id_wilayah_layanan || item.wilayah_layanan?.id_wilayah_layanan;
+          const nama = item.wilayah_layanan?.nama_wilayah || `Wilayah #${id}`;
+          return [id, { id, nama }];
+        })
+    ).values()
+  );
+
+  // Logika Filter Data
   const filtered = requests.filter((item) => {
     const query = search.toLowerCase();
     const nama = String(
@@ -60,10 +75,15 @@ export default function PageNakesRequest() {
     const nik = String(item.nik ?? '').toLowerCase();
     const noStr = String(item.no_str ?? item.str ?? '').toLowerCase();
     const status = String(item.status ?? 'pending').toLowerCase();
+    const idWilayah = String(item.id_wilayah_layanan ?? item.wilayah_layanan?.id_wilayah_layanan ?? '');
 
-    // Filter berdasarkan status tab
+    if (wilayahFilter !== 'all' && idWilayah !== wilayahFilter) {
+      return false;
+    }
+
     if (statusFilter !== 'all') {
       if (statusFilter === 'pending' && status !== 'pending' && status !== '') return false;
+      if (statusFilter === 'pelatihan' && status !== 'pelatihan') return false;
       if (statusFilter === 'approved' && status !== 'approved') return false;
       if (statusFilter === 'rejected' && status !== 'rejected') return false;
     }
@@ -84,7 +104,24 @@ export default function PageNakesRequest() {
     currentPage * itemsPerPage
   );
 
-  // Aksi Approve
+  // 🔹 Step 1: Setujui ke Pelatihan (pending -> pelatihan)
+  async function handleConfirmPelatihan() {
+    if (!pelatihanTarget) return;
+    const targetId = pelatihanTarget.id ?? pelatihanTarget.id_nakes_request;
+    setProcessing(true);
+    try {
+      await pelatihanNakesRequest(targetId, adminNotes);
+      setPelatihanTarget(null);
+      setAdminNotes('');
+      loadData();
+    } catch (err) {
+      alert(err.message || 'Gagal mengubah status ke pelatihan');
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  // 🔹 Step 2: Setujui & Buat Akun Nakes (pelatihan -> approved)
   async function handleConfirmApprove() {
     if (!approveTarget) return;
     const targetId = approveTarget.id ?? approveTarget.id_nakes_request;
@@ -94,13 +131,13 @@ export default function PageNakesRequest() {
       setApproveTarget(null);
       loadData();
     } catch (err) {
-      alert(err.message || 'Gagal menyetujui permohonan');
+      alert(err.message || 'Gagal menyetujui & membuat akun nakes');
     } finally {
       setProcessing(false);
     }
   }
 
-  // Aksi Reject
+  // 🔹 Aksi Tolak Permohonan
   async function handleConfirmReject() {
     if (!rejectTarget) return;
     const targetId = rejectTarget.id ?? rejectTarget.id_nakes_request;
@@ -117,13 +154,20 @@ export default function PageNakesRequest() {
     }
   }
 
-  // Helper render Badge Status
+  // 🟢 Helper render Badge Status
   function renderStatusBadge(status) {
     const s = String(status || 'pending').toLowerCase();
     if (s === 'approved') {
       return (
         <span className="inline-block rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
-          Disetujui
+          Sudah Disetujui
+        </span>
+      );
+    }
+    if (s === 'pelatihan') {
+      return (
+        <span className="inline-block rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">
+          Menunggu Pelatihan
         </span>
       );
     }
@@ -136,7 +180,7 @@ export default function PageNakesRequest() {
     }
     return (
       <span className="inline-block rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
-        Pending
+        Menunggu Verifikasi
       </span>
     );
   }
@@ -148,22 +192,37 @@ export default function PageNakesRequest() {
         <div>
           <h1 className="page-title">Request Registrasi Nakes</h1>
           <p className="page-subtitle">
-            Kelola permohonan pendaftaran tenaga kesehatan baru di sini
+            Kelola verifikasi bertahap dan aktivasi akun tenaga kesehatan baru
           </p>
         </div>
       </div>
 
-      {/* Filter / Search & Status Filter Buttons */}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <input
-          type="text"
-          placeholder="Cari nama, email, NIK, No STR, atau jenis nakes..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="form-input max-w-full sm:max-w-[360px]"
-        />
+      {/* Filter / Search, Wilayah & Status Filter */}
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+          <input
+            type="text"
+            placeholder="Cari nama, email, NIK, No STR..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="form-input w-full sm:w-[280px]"
+          />
 
-        {/* Tombol Filter Status */}
+          <select
+            value={wilayahFilter}
+            onChange={(e) => setWilayahFilter(e.target.value)}
+            className="form-input w-full sm:w-[200px] bg-white cursor-pointer"
+          >
+            <option value="all">📍 Semua Wilayah</option>
+            {listWilayah.map((w) => (
+              <option key={w.id} value={w.id}>
+                {w.nama}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* 🟢 Tombol Filter Status Kategori */}
         <div className="flex flex-wrap gap-1.5">
           <button
             onClick={() => setStatusFilter('all')}
@@ -175,6 +234,7 @@ export default function PageNakesRequest() {
           >
             Semua
           </button>
+
           <button
             onClick={() => setStatusFilter('pending')}
             className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
@@ -185,6 +245,18 @@ export default function PageNakesRequest() {
           >
             Pending
           </button>
+
+          <button
+            onClick={() => setStatusFilter('pelatihan')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+              statusFilter === 'pelatihan'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            Sedang Pelatihan
+          </button>
+
           <button
             onClick={() => setStatusFilter('approved')}
             className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
@@ -193,8 +265,9 @@ export default function PageNakesRequest() {
                 : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
             }`}
           >
-            Disetujui
+            Sudah Disetujui
           </button>
+
           <button
             onClick={() => setStatusFilter('rejected')}
             className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
@@ -265,7 +338,9 @@ export default function PageNakesRequest() {
                   const foto = item.foto_profile ?? item.foto ?? item.avatar;
                   const profesi =
                     item.jenis_tenaga_medis ?? item.spesialisasi ?? item.peran ?? '-';
+                  
                   const isPending = !item.status || item.status === 'pending';
+                  const isPelatihan = item.status === 'pelatihan';
 
                   return (
                     <tr key={reqId || index} className="hover:bg-slate-50">
@@ -277,7 +352,9 @@ export default function PageNakesRequest() {
                           <img
                             src={getImageUrl(foto)}
                             alt={nama}
-                            className="h-10 w-10 rounded-full border border-slate-200 object-cover"
+                            onClick={() => setPreviewImage(getImageUrl(foto))}
+                            className="h-10 w-10 rounded-full border border-slate-200 object-cover cursor-pointer hover:scale-105 transition-transform"
+                            title="Klik untuk memperbesar"
                           />
                         ) : (
                           <div className="flex h-10 w-10 items-center justify-center rounded-full border border-dashed border-slate-200 bg-slate-100 text-xs font-bold text-slate-400">
@@ -305,21 +382,49 @@ export default function PageNakesRequest() {
                         {renderStatusBadge(item.status)}
                       </td>
                       <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-1.5">
                           <button
                             className="btn-outline btn-sm"
                             onClick={() => setDetailTarget(item)}
                           >
                             Detail
                           </button>
+
+                          {/* 🟢 STEP 1: Jika Menunggu Verifikasi (Pending) -> "Setujui ke Pelatihan" */}
                           {isPending && (
+                            <>
+                              <button
+                                className="rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-700 transition-colors shadow-xs"
+                                onClick={() => {
+                                  setPelatihanTarget(item);
+                                  setAdminNotes('');
+                                }}
+                              >
+                                Setujui ke Pelatihan
+                              </button>
+
+                              <button
+                                className="btn-danger btn-sm"
+                                onClick={() => {
+                                  setRejectTarget(item);
+                                  setAdminNotes('');
+                                }}
+                              >
+                                Tolak
+                              </button>
+                            </>
+                          )}
+
+                          {/* 🟢 STEP 2: Jika Menunggu Pelatihan (Pelatihan) -> "Setujui Akun Nakes" */}
+                          {isPelatihan && (
                             <>
                               <button
                                 className="btn-primary btn-sm"
                                 onClick={() => setApproveTarget(item)}
                               >
-                                Setujui
+                                Setujui Akun Nakes
                               </button>
+
                               <button
                                 className="btn-danger btn-sm"
                                 onClick={() => {
@@ -417,14 +522,14 @@ export default function PageNakesRequest() {
         )}
       </div>
 
-      {/* Modal Detail */}
+      {/* Modal Detail Request */}
       {detailTarget && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-5"
           onClick={() => setDetailTarget(null)}
         >
           <div
-            className="w-full max-w-lg rounded-card bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-xl rounded-card bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -433,36 +538,48 @@ export default function PageNakesRequest() {
             </div>
 
             <div className="space-y-4 text-sm">
-              {/* Header Profile Nakes */}
-              <div className="flex items-center gap-4 rounded-lg bg-slate-50 p-4 border border-slate-200">
+              <div className="flex items-center gap-4 rounded-xl bg-slate-50 p-4 border border-slate-200">
                 {detailTarget.foto_profile ? (
-                  <img
-                    src={getImageUrl(detailTarget.foto_profile)}
-                    alt={detailTarget.nama_lengkap}
-                    className="h-16 w-16 rounded-full border border-slate-200 object-cover"
-                  />
+                  <div className="relative group shrink-0">
+                    <img
+                      src={getImageUrl(detailTarget.foto_profile)}
+                      alt={detailTarget.nama_lengkap}
+                      onClick={() => setPreviewImage(getImageUrl(detailTarget.foto_profile))}
+                      className="h-24 w-24 rounded-full border-2 border-slate-300 object-cover cursor-pointer group-hover:opacity-90 group-hover:scale-105 transition-all shadow-md"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer pointer-events-none">
+                      <span className="text-white text-xs font-semibold">🔍 Zoom</span>
+                    </div>
+                  </div>
                 ) : (
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 text-xl font-bold text-slate-500">
+                  <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-slate-200 text-3xl font-bold text-slate-500">
                     {(detailTarget.nama_lengkap || 'N').charAt(0).toUpperCase()}
                   </div>
                 )}
+
                 <div>
-                  <h4 className="text-base font-bold text-slate-900">
+                  <h4 className="text-lg font-bold text-slate-900">
                     {detailTarget.nama_lengkap ?? detailTarget.nama ?? '-'}
                   </h4>
                   <p className="text-xs text-slate-500">{detailTarget.user?.email ?? '-'}</p>
-                  <span className="badge badge-aktif mt-1.5">
-                    {detailTarget.jenis_tenaga_medis ?? detailTarget.spesialisasi ?? '-'}
-                  </span>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <span className="badge badge-aktif">
+                      {detailTarget.jenis_tenaga_medis ?? detailTarget.spesialisasi ?? '-'}
+                    </span>
+                    {detailTarget.wilayah_layanan?.nama_wilayah && (
+                      <span className="inline-block rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                        📍 {detailTarget.wilayah_layanan.nama_wilayah}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Data Nakes */}
               <div>
                 <h5 className="font-bold text-slate-700 text-xs uppercase tracking-wide mb-2">
                   Informasi Tenaga Kesehatan
                 </h5>
-                <div className="grid grid-cols-2 gap-3 rounded-lg border border-slate-200 p-3 bg-white">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-lg border border-slate-200 p-3 bg-white">
                   <div>
                     <span className="text-xs text-slate-400">NIK:</span>
                     <p className="font-semibold text-slate-800">{detailTarget.nik ?? '-'}</p>
@@ -475,71 +592,85 @@ export default function PageNakesRequest() {
                     <span className="text-xs text-slate-400">Lulusan / Institusi:</span>
                     <p className="font-semibold text-slate-800">{detailTarget.lulusan ?? '-'}</p>
                   </div>
+
                   <div>
-                    <span className="text-xs text-slate-400">Koordinat (Lat, Long):</span>
-                    <p className="font-semibold text-slate-800">
-                      {detailTarget.latitude && detailTarget.longitude
-                        ? `${detailTarget.latitude}, ${detailTarget.longitude}`
-                        : '-'}
-                    </p>
+                    <span className="text-xs text-slate-400">Koordinat Lokasi:</span>
+                    {detailTarget.latitude && detailTarget.longitude ? (
+                      <div className="mt-1">
+                        <p className="text-xs font-semibold text-slate-800 mb-1">
+                          {detailTarget.latitude}, {detailTarget.longitude}
+                        </p>
+                        <a
+                          href={`https://maps.google.com/?q=${detailTarget.latitude},${detailTarget.longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                        >
+                          🗺️ Buka di Google Maps
+                        </a>
+                      </div>
+                    ) : (
+                      <p className="font-semibold text-slate-800">-</p>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Data Pasien Terhubung */}
-              {detailTarget.pasien && (
-                <div>
-                  <h5 className="font-bold text-slate-700 text-xs uppercase tracking-wide mb-2">
-                    Informasi Profil Pasien Terhubung
-                  </h5>
-                  <div className="space-y-2 rounded-lg border border-slate-200 p-3 bg-white">
-                    <div className="grid grid-cols-2 gap-3">
+              <div>
+                <h5 className="font-bold text-slate-700 text-xs uppercase tracking-wide mb-2">
+                  Dokumen Persyaratan
+                </h5>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3 bg-white">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">📄</span>
                       <div>
-                        <span className="text-xs text-slate-400">Nama Pasien:</span>
-                        <p className="font-semibold text-slate-800">
-                          {detailTarget.pasien.nama_lengkap ?? '-'}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-xs text-slate-400">No. HP / Telp:</span>
-                        <p className="font-semibold text-slate-800">
-                          {detailTarget.pasien.no_hp ?? '-'}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-xs text-slate-400">Golongan Darah:</span>
-                        <p className="font-semibold text-slate-800">
-                          {detailTarget.pasien.golongan_darah ?? '-'}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-xs text-slate-400">Jenis Kelamin:</span>
-                        <p className="font-semibold text-slate-800">
-                          {detailTarget.pasien.jenis_kelamin === 'L'
-                            ? 'Laki-laki'
-                            : detailTarget.pasien.jenis_kelamin === 'P'
-                            ? 'Perempuan'
-                            : '-'}
+                        <p className="text-xs font-bold text-slate-800">Ijazah</p>
+                        <p className="text-[10px] text-slate-400">
+                          {detailTarget.ijazah ? 'Berkas Tersedia' : 'Belum diunggah'}
                         </p>
                       </div>
                     </div>
-                    {detailTarget.pasien.alamat_utama && (
-                      <div className="pt-1 border-t border-slate-100">
-                        <span className="text-xs text-slate-400">Alamat Utama:</span>
-                        <p className="text-xs font-medium text-slate-700 whitespace-pre-line">
-                          {detailTarget.pasien.alamat_utama}
+                    {detailTarget.ijazah && (
+                      <a
+                        href={getImageUrl(detailTarget.ijazah)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-outline btn-sm text-xs py-1 px-2.5"
+                      >
+                        Buka
+                      </a>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3 bg-white">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">📜</span>
+                      <div>
+                        <p className="text-xs font-bold text-slate-800">Sertifikat</p>
+                        <p className="text-[10px] text-slate-400">
+                          {detailTarget.sertifikat ? 'Berkas Tersedia' : 'Belum diunggah'}
                         </p>
                       </div>
+                    </div>
+                    {detailTarget.sertifikat && (
+                      <a
+                        href={getImageUrl(detailTarget.sertifikat)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-outline btn-sm text-xs py-1 px-2.5"
+                      >
+                        Buka
+                      </a>
                     )}
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* Catatan Admin */}
               {detailTarget.admin_notes && (
-                <div className="rounded-lg bg-red-50 p-3 border border-red-200">
-                  <span className="text-xs font-bold text-red-700">Catatan Admin (Penolakan):</span>
-                  <p className="text-xs text-red-800 mt-1">{detailTarget.admin_notes}</p>
+                <div className="rounded-lg bg-blue-50 p-3 border border-blue-200">
+                  <span className="text-xs font-bold text-blue-700">Catatan Admin:</span>
+                  <p className="text-xs text-blue-800 mt-1">{detailTarget.admin_notes}</p>
                 </div>
               )}
             </div>
@@ -553,21 +684,90 @@ export default function PageNakesRequest() {
         </div>
       )}
 
-      {/* Modal Approve */}
+      {/* Lightbox Foto Profil */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-5 backdrop-blur-xs"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="relative max-w-lg max-h-[85vh] p-2 bg-white rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black font-bold text-sm"
+            >
+              ✕
+            </button>
+            <img
+              src={previewImage}
+              alt="Foto Profil Ukuran Penuh"
+              className="max-h-[75vh] w-auto rounded-xl object-contain mx-auto"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 🟢 MODAL STEP 1: Setujui Ke Pelatihan */}
+      {pelatihanTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-5"
+          onClick={() => !processing && setPelatihanTarget(null)}
+        >
+          <div
+            className="w-full max-w-[420px] rounded-card bg-white p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-2.5 text-lg font-bold">Setujui untuk Pelatihan?</h3>
+            <p className="mb-3 text-sm text-slate-500">
+              Menyetujui pendaftaran awal nakes <strong>{pelatihanTarget.nama_lengkap ?? pelatihanTarget.nama ?? '-'}</strong> dan melanjutkannya ke tahap Pelatihan.
+            </p>
+
+            <div className="mb-5">
+              <label className="form-label">Catatan Pelatihan (Opsional)</label>
+              <textarea
+                value={adminNotes}
+                onChange={(e) => setAdminNotes(e.target.value)}
+                placeholder="Tuliskan jadwal, instruksi, atau catatan pelatihan..."
+                className="form-input resize-y"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2.5">
+              <button
+                className="btn-outline"
+                onClick={() => setPelatihanTarget(null)}
+                disabled={processing}
+              >
+                Batal
+              </button>
+              <button
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                onClick={handleConfirmPelatihan}
+                disabled={processing}
+              >
+                {processing ? 'Memproses...' : 'Setujui & Lanjut Pelatihan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🟢 MODAL STEP 2: Setujui & Buat Akun Nakes */}
       {approveTarget && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-5"
           onClick={() => !processing && setApproveTarget(null)}
         >
           <div
-            className="w-full max-w-[400px] rounded-card bg-white p-6 shadow-2xl"
+            className="w-full max-w-[420px] rounded-card bg-white p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="mb-2.5 text-lg font-bold">Setujui Permohonan Nakes?</h3>
+            <h3 className="mb-2.5 text-lg font-bold">Setujui & Buat Akun Nakes?</h3>
             <p className="mb-5 text-sm text-slate-500">
-              Yakin ingin menyetujui pendaftaran nakes{' '}
-              <strong>{approveTarget.nama_lengkap ?? approveTarget.nama ?? '-'}</strong>?
-              Pengguna ini akan resmi terdaftar sebagai Tenaga Kesehatan.
+              Nakes <strong>{approveTarget.nama_lengkap ?? approveTarget.nama ?? '-'}</strong> telah menyelesaikan pelatihan. Setujui untuk mengaktifkan dan membuat Akun Nakes secara resmi.
             </p>
             <div className="flex justify-end gap-2.5">
               <button
@@ -582,14 +782,14 @@ export default function PageNakesRequest() {
                 onClick={handleConfirmApprove}
                 disabled={processing}
               >
-                {processing ? 'Memproses...' : 'Ya, Setujui'}
+                {processing ? 'Memproses...' : 'Ya, Setujui & Buat Akun'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal Reject */}
+      {/* MODAL TOLAK */}
       {rejectTarget && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-5"

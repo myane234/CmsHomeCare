@@ -14,7 +14,7 @@ import PromoEdit from './pages/PromoEdit';
 import PageArtikel from './pages/PageArtikel';
 import FormTambahArtikel from './pages/FormTambahArtikel';
 import FormEditArtikel from './pages/FormEditArtikel';
-import PageNakesRequest from './pages/PageNakesRequest';
+import PageNakesRequest from './pages/admin/PageNakesRequest';
 import PageBooking from './pages/admin/PageBooking';
 import AdminLayout from './components/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
