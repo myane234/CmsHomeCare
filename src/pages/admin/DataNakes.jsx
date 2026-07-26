@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FaSearch, FaEdit } from 'react-icons/fa';
 import Pagination from '../../components/pagination';
-import { getAllActiveNakes, getKategoriLayanan, updateNakesData } from '../../data/nakesData';
+import { getAllActiveNakes, getKategoriLayanan, updateNakesData, deleteNakesData } from '../../data/nakesData';
 import { getImageUrl } from '../../data/imageHelper';
 import Swal from 'sweetalert2';
 
@@ -102,6 +102,29 @@ export default function DataNakes() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleDeleteClick = (nakes) => {
+    Swal.fire({
+      title: 'Hapus Tenaga Medis?',
+      text: `Anda yakin ingin menghapus data nakes ${nakes.nama}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await deleteNakesData(nakes.id);
+          Swal.fire('Terhapus!', 'Data tenaga medis berhasil dihapus.', 'success');
+          fetchData();
+        } catch (err) {
+          Swal.fire('Gagal!', err.message || 'Terjadi kesalahan saat menghapus data.', 'error');
+        }
+      }
+    });
   };
 
   const toggleKategoriSelection = (katId) => {
@@ -223,9 +246,14 @@ export default function DataNakes() {
                         {item.wilayahLayanan || <span className="text-slate-400 italic">Belum diatur</span>}
                       </td>
                       <td className="border-b border-slate-200 px-4 py-3 text-sm">
-                        <button onClick={() => handleEditClick(item)} className="btn-outline btn-sm inline-flex items-center gap-2">
-                          <FaEdit /> Edit
-                        </button>
+                        <div className="flex gap-2">
+                          <button onClick={() => handleEditClick(item)} className="btn-outline btn-sm inline-flex items-center gap-2">
+                            <FaEdit /> Edit
+                          </button>
+                          <button onClick={() => handleDeleteClick(item)} className="btn-danger btn-sm inline-flex items-center gap-2">
+                            Hapus
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

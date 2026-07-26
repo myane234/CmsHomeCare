@@ -57,3 +57,14 @@ export async function updateNakesData(id, formData) {
 
   return await parseJsonResponse(res);
 }
+
+export async function deleteNakesData(id) {
+  const res = await fetch(`${URL}/super-admin/nakes/${id}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders({
+        'Accept': 'application/json',
+    }),
+  });
+
+  return await parseJsonResponse(res);
+}

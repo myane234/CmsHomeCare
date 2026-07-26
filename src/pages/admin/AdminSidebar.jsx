@@ -4,8 +4,9 @@ import { FaChartBar, FaUserMd, FaUserPlus } from 'react-icons/fa';
 
 const menuItems = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: <FaChartBar /> },
-  { to: '/admin/nakes', label: 'Data Nakes', icon: <FaUserMd /> },
+  { to: '/admin/nakes', label: 'Master Data Nakes', icon: <FaUserMd /> },
   { to: '/admin/nakes/requests', label: 'Request Nakes', icon: <FaUserPlus /> },
+  { to: '/admin/booking', label: 'Manajemen Booking', icon: <FaChartBar /> },
 ];
 
 export default function AdminSidebar({ open, onClose }) {

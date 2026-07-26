@@ -11,6 +11,7 @@ export default function PageNakesRequest() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all'); // State untuk filter status
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -44,9 +45,9 @@ export default function PageNakesRequest() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1);
-  }, [search]);
+  }, [search, statusFilter]);
 
-  // Logika Filter
+  // Logika Filter (Pencarian & Status)
   const filtered = requests.filter((item) => {
     const query = search.toLowerCase();
     const nama = String(
@@ -58,7 +59,14 @@ export default function PageNakesRequest() {
     ).toLowerCase();
     const nik = String(item.nik ?? '').toLowerCase();
     const noStr = String(item.no_str ?? item.str ?? '').toLowerCase();
-    const status = String(item.status ?? '').toLowerCase();
+    const status = String(item.status ?? 'pending').toLowerCase();
+
+    // Filter berdasarkan status tab
+    if (statusFilter !== 'all') {
+      if (statusFilter === 'pending' && status !== 'pending' && status !== '') return false;
+      if (statusFilter === 'approved' && status !== 'approved') return false;
+      if (statusFilter === 'rejected' && status !== 'rejected') return false;
+    }
 
     return (
       nama.includes(query) ||
@@ -145,8 +153,8 @@ export default function PageNakesRequest() {
         </div>
       </div>
 
-      {/* Filter / Search */}
-      <div className="mb-4">
+      {/* Filter / Search & Status Filter Buttons */}
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <input
           type="text"
           placeholder="Cari nama, email, NIK, No STR, atau jenis nakes..."
@@ -154,6 +162,50 @@ export default function PageNakesRequest() {
           onChange={(e) => setSearch(e.target.value)}
           className="form-input max-w-full sm:max-w-[360px]"
         />
+
+        {/* Tombol Filter Status */}
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            onClick={() => setStatusFilter('all')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+              statusFilter === 'all'
+                ? 'bg-primary text-white shadow-xs'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            Semua
+          </button>
+          <button
+            onClick={() => setStatusFilter('pending')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+              statusFilter === 'pending'
+                ? 'bg-amber-600 text-white shadow-xs'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            Pending
+          </button>
+          <button
+            onClick={() => setStatusFilter('approved')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+              statusFilter === 'approved'
+                ? 'bg-green-600 text-white shadow-xs'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            Disetujui
+          </button>
+          <button
+            onClick={() => setStatusFilter('rejected')}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+              statusFilter === 'rejected'
+                ? 'bg-red-600 text-white shadow-xs'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            Ditolak
+          </button>
+        </div>
       </div>
 
       {errorMsg && (
@@ -289,7 +341,7 @@ export default function PageNakesRequest() {
           </div>
         )}
 
-        {/* Pagination Controls - Always shown when data finishes loading */}
+        {/* Pagination Controls */}
         {!loading && (
           <div className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-3.5 sm:px-6">
             <div className="flex flex-1 justify-between sm:hidden">
