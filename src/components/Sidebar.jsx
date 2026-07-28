@@ -15,7 +15,7 @@ const superAdminMenus = [
   { to: '/kelola-admin', label: 'Kelola Admin', icon: '🔧' },
 ];
 
-export default function Sidebar({ open, onClose, collapsed = false, onToggleCollapse }) {
+export default function Sidebar({ open, onClose, width }) {
   // Gabungkan menu berdasarkan role
   const menus = isSuperAdmin() ? [...menuItems, ...superAdminMenus] : menuItems;
 
@@ -30,11 +30,10 @@ export default function Sidebar({ open, onClose, collapsed = false, onToggleColl
 
       <aside
         className={
-          'fixed inset-y-0 left-0 z-40 flex flex-col border-r border-slate-200 bg-white transition-all duration-200 md:static md:translate-x-0 ' +
-          (open ? 'translate-x-0' : '-translate-x-full') +
-          ' ' +
-          (collapsed ? 'w-20' : 'w-64')
+          'fixed inset-y-0 left-0 z-40 flex flex-shrink-0 flex-col bg-white border-r border-slate-200 transition-transform duration-200 md:static md:translate-x-0 ' +
+          (open ? 'translate-x-0' : '-translate-x-full')
         }
+        style={{ width: `${width}px`, minWidth: '220px', maxWidth: '420px' }}
       >
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} border-b border-slate-200 bg-accent px-3 py-4`}>
           <img src={logo} alt="Smartcare" className={collapsed ? 'h-8 w-8 object-contain' : 'h-10 w-auto object-contain'} />

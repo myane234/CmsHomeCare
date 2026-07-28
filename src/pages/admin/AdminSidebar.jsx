@@ -9,7 +9,7 @@ const menuItems = [
   { to: '/admin/booking', label: 'Manajemen Booking', icon: <FaChartBar /> },
 ];
 
-export default function AdminSidebar({ open, onClose, collapsed = false, onToggleCollapse }) {
+export default function AdminSidebar({ open, onClose, width }) {
   return (
     <>
       {open && (
@@ -21,11 +21,10 @@ export default function AdminSidebar({ open, onClose, collapsed = false, onToggl
 
       <aside
         className={
-          'fixed inset-y-0 left-0 z-40 flex h-full flex-shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200 md:sticky md:top-0 md:h-screen ' +
-          (open ? 'translate-x-0' : '-translate-x-full md:translate-x-0') +
-          ' ' +
-          (collapsed ? 'w-20' : 'w-64')
+          'fixed inset-y-0 left-0 z-40 flex h-full flex-shrink-0 flex-col bg-white transition-transform duration-200 md:sticky md:top-0 ' +
+          (open ? 'translate-x-0' : '-translate-x-full md:translate-x-0')
         }
+        style={{ width: `${width}px`, minWidth: '220px', maxWidth: '420px' }}
       >
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} border-b border-slate-200 bg-white px-3 py-4`}>
           <img
