@@ -5,24 +5,72 @@ import AdminSidebar from '../pages/admin/AdminSidebar';
 import { getSession, logout } from '../utils/auth';
 import { isSuperAdmin } from '../utils/role';
 
+const SIDEBAR_STORAGE_KEY = 'sidebar-width';
+const SIDEBAR_MIN_WIDTH = 220;
+const SIDEBAR_MAX_WIDTH = 420;
+const SIDEBAR_DEFAULT_WIDTH = 280;
+
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const session = getSession();
   const [open, setOpen] = useState(false); // user dropdown
   const [sidebarOpen, setSidebarOpen] = useState(false); // mobile sidebar
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    try {
+      const savedWidth = parseInt(localStorage.getItem(SIDEBAR_STORAGE_KEY), 10);
+      if (savedWidth && !Number.isNaN(savedWidth)) {
+        return Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, savedWidth));
+      }
+    } catch {
+      // ignore localStorage errors in environments where it's unavailable
+    }
+    return SIDEBAR_DEFAULT_WIDTH;
+  });
+  const [isResizing, setIsResizing] = useState(false);
   const menuRef = useRef(null);
+  const startXRef = useRef(0);
+  const startWidthRef = useRef(sidebarWidth);
   const useAdminSidebar = location.pathname.startsWith('/admin');
 
   useEffect(() => {
-    function handleClickOutside(e) {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setOpen(false);
-      }
+    if (!isResizing) return undefined;
+
+    function handleMouseMove(event) {
+      const delta = event.clientX - startXRef.current;
+      const nextWidth = Math.min(
+        SIDEBAR_MAX_WIDTH,
+        Math.max(SIDEBAR_MIN_WIDTH, startWidthRef.current + delta)
+      );
+      setSidebarWidth(nextWidth);
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+
+    function handleMouseUp() {
+      setIsResizing(false);
+    }
+
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarWidth.toString());
+  }, [sidebarWidth]);
+
+  function handleResizeMouseDown(event) {
+    startXRef.current = event.clientX;
+    startWidthRef.current = sidebarWidth;
+    setIsResizing(true);
+  }
 
   function handleLogout() {
     logout();
@@ -33,10 +81,27 @@ export default function AdminLayout() {
     <div className="flex h-screen overflow-hidden bg-slate-50">
       {/* Sidebar Kiri */}
       {useAdminSidebar ? (
-        <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <AdminSidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          width={sidebarWidth}
+        />
       ) : (
-        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          width={sidebarWidth}
+        />
       )}
+
+      <div
+        className="hidden md:block cursor-col-resize bg-slate-100 hover:bg-slate-200"
+        style={{ width: '6px' }}
+        onMouseDown={handleResizeMouseDown}
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize sidebar"
+      />
 
       {/* Area Kanan (Header + Konten Utama) */}
       <div className="flex flex-1 flex-col overflow-y-auto">

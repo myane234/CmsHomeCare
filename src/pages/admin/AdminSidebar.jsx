@@ -9,7 +9,7 @@ const menuItems = [
   { to: '/admin/booking', label: 'Manajemen Booking', icon: <FaChartBar /> },
 ];
 
-export default function AdminSidebar({ open, onClose }) {
+export default function AdminSidebar({ open, onClose, width }) {
   return (
     <>
       {open && (
@@ -21,9 +21,10 @@ export default function AdminSidebar({ open, onClose }) {
 
       <aside
         className={
-          'fixed inset-y-0 left-0 z-40 flex h-full w-64 flex-shrink-0 flex-col bg-white transition-transform duration-200 md:sticky md:top-0 ' +
+          'fixed inset-y-0 left-0 z-40 flex h-full flex-shrink-0 flex-col bg-white transition-transform duration-200 md:sticky md:top-0 ' +
           (open ? 'translate-x-0' : '-translate-x-full md:translate-x-0')
         }
+        style={{ width: `${width}px`, minWidth: '220px', maxWidth: '420px' }}
       >
         {/* Diubah dari bg-accent menjadi bg-white */}
         <div className="flex flex-col items-start gap-1 bg-white px-5 py-5">
