@@ -9,7 +9,13 @@ const menuItems = [
   { to: '/admin/booking', label: 'Manajemen Booking', icon: <FaChartBar /> },
 ];
 
-export default function AdminSidebar({ open, onClose, width }) {
+export default function AdminSidebar({ 
+  open, 
+  onClose, 
+  width = 260, 
+  collapsed = false, 
+  onToggleCollapse 
+}) {
   return (
     <>
       {open && (
@@ -21,12 +27,13 @@ export default function AdminSidebar({ open, onClose, width }) {
 
       <aside
         className={
-          'fixed inset-y-0 left-0 z-40 flex h-full flex-shrink-0 flex-col bg-white transition-transform duration-200 md:sticky md:top-0 ' +
+          'fixed inset-y-0 left-0 z-40 flex flex-shrink-0 flex-col bg-white border-r border-slate-200 transition-all duration-300 md:sticky md:top-0 h-screen ' +
           (open ? 'translate-x-0' : '-translate-x-full md:translate-x-0')
         }
-        style={{ width: `${width}px`, minWidth: '220px', maxWidth: '420px' }}
+        style={{ width: collapsed ? '80px' : `${width}px` }}
       >
-        <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} border-b border-slate-200 bg-white px-3 py-4`}>
+        {/* Header Logo dengan bg-accent */}
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} border-b border-slate-200 bg-accent px-3 py-4`}>
           <img
             src={logo}
             alt="Smartcare"
@@ -42,6 +49,7 @@ export default function AdminSidebar({ open, onClose, width }) {
           </button>
         </div>
 
+        {/* Menu Items */}
         <nav className="flex flex-col gap-1 p-3">
           {menuItems.map((item) => (
             <NavLink
@@ -60,7 +68,7 @@ export default function AdminSidebar({ open, onClose, width }) {
               }
             >
               <span className="w-5 text-center text-base">{item.icon}</span>
-              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
             </NavLink>
           ))}
         </nav>

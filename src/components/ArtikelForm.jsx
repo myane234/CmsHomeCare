@@ -133,10 +133,8 @@ export default function ArtikelForm({ initialData, onSubmit, submitting, mode, s
         {/* Isi Artikel – Rich Text Editor */}
         <div className="flex flex-col">
           <label className="form-label mt-0">Isi Artikel</label>
-          <p className="mb-2 text-xs text-slate-400">
-            Gunakan toolbar di atas editor untuk <strong>Bold</strong>, <em>Italic</em>, ukuran teks, dan sisipkan tautan.
-          </p>
           <RichTextEditor
+            key={mode === 'edit' ? `article-editor-${initialData?.id || 'new'}` : 'article-editor-new'}
             value={form.isi_artikel}
             onChange={handleRichTextChange}
             placeholder="Tulis isi artikel di sini..."

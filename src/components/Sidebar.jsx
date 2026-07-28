@@ -10,13 +10,11 @@ const menuItems = [
   { to: '/artikel', label: 'Artikel', icon: <FaRegFileAlt /> },
 ];
 
-// Menu khusus Super Admin
 const superAdminMenus = [
   { to: '/kelola-admin', label: 'Kelola Admin', icon: '🔧' },
 ];
 
-export default function Sidebar({ open, onClose, width }) {
-  // Gabungkan menu berdasarkan role
+export default function Sidebar({ open, onClose, width = 260, collapsed = false, onToggleCollapse }) {
   const menus = isSuperAdmin() ? [...menuItems, ...superAdminMenus] : menuItems;
 
   return (
@@ -30,10 +28,10 @@ export default function Sidebar({ open, onClose, width }) {
 
       <aside
         className={
-          'fixed inset-y-0 left-0 z-40 flex flex-shrink-0 flex-col bg-white border-r border-slate-200 transition-transform duration-200 md:static md:translate-x-0 ' +
+          'fixed inset-y-0 left-0 z-40 flex flex-shrink-0 flex-col bg-white border-r border-slate-200 transition-all duration-300 md:static md:translate-x-0 ' +
           (open ? 'translate-x-0' : '-translate-x-full')
         }
-        style={{ width: `${width}px`, minWidth: '220px', maxWidth: '420px' }}
+        style={{ width: collapsed ? '80px' : `${width}px` }}
       >
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} border-b border-slate-200 bg-accent px-3 py-4`}>
           <img src={logo} alt="Smartcare" className={collapsed ? 'h-8 w-8 object-contain' : 'h-10 w-auto object-contain'} />
@@ -64,7 +62,7 @@ export default function Sidebar({ open, onClose, width }) {
               }
             >
               <span className="w-5 text-center text-base">{item.icon}</span>
-              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
             </NavLink>
           ))}
         </nav>
@@ -76,7 +74,7 @@ export default function Sidebar({ open, onClose, width }) {
             className={`flex w-full items-center rounded-lg bg-primary-light px-4 py-2.5 text-sm font-bold text-primary-dark transition-colors hover:bg-primary hover:text-white ${collapsed ? 'justify-center' : 'justify-center gap-2'}`}
           >
             <FaUserShield />
-            {!collapsed && <span>Login Super Admin</span>}
+            {!collapsed && <span className="whitespace-nowrap">Login Super Admin</span>}
           </a>
         </div>
       </aside>

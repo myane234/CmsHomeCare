@@ -14,6 +14,20 @@ function formatDate(raw) {
   });
 }
 
+function stripHtml(html) {
+  if (!html) return '';
+  return String(html)
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export default function PageArtikel() {
   const [artikel, setArtikel] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -149,7 +163,7 @@ export default function PageArtikel() {
                 </span>
                 <h3 className="text-base font-bold text-slate-900">{item.judul_artikel}</h3>
                 <p className="mt-1.5 line-clamp-2 text-sm text-slate-500">
-                  {item.isi_artikel}
+                  {stripHtml(item.isi_artikel)}
                 </p>
                 {/* Tanggal diperbarui */}
                 <p className="mt-2 text-xs text-slate-400">

@@ -76,20 +76,24 @@ function ensureEditorStylesInjected() {
     ${sizeLabelRules}
 
     .ql-toolbar.ql-snow .ql-picker.ql-size {
-      width: 62px;
+      width: 92px;
+      min-width: 92px;
     }
     .ql-toolbar.ql-snow .ql-picker.ql-size .ql-picker-options {
-      max-height: 220px;
+      max-height: 260px;
       overflow-y: auto;
+      min-width: 10rem;
+    }
+    .ql-snow .ql-picker {
+      min-width: 5rem;
     }
 
     /* --- Responsive editor box: toolbar stays fixed, editor area scrolls --- */
     .rte-wrapper .ql-toolbar.ql-snow {
       border-top-left-radius: 0.5rem;
       border-top-right-radius: 0.5rem;
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      position: relative;
+      z-index: 1;
       background: #fff;
     }
     .rte-wrapper .ql-container.ql-snow {
@@ -101,6 +105,8 @@ function ensureEditorStylesInjected() {
       min-height: 240px;
       max-height: 55vh;
       overflow-y: auto;
+      word-break: break-word;
+      white-space: pre-wrap;
     }
     @media (max-width: 640px) {
       .rte-wrapper .ql-editor {
@@ -178,10 +184,23 @@ export default function RichTextEditor({ value, onChange, placeholder, error }) 
       placeholder: placeholder || 'Tulis isi artikel di sini...',
       modules: {
         toolbar: TOOLBAR_OPTIONS,
+        clipboard: {
+          matchVisual: false,
+        },
+        history: {
+          delay: 2000,
+          maxStack: 500,
+          userOnly: true,
+        },
       },
+      formats: ['header', 'size', 'bold', 'italic', 'underline', 'link', 'list', 'blockquote', 'clean'],
     });
 
     quillRef.current = quill;
+
+    if (value) {
+      quill.clipboard.dangerouslyPasteHTML(value);
+    }
 
     // Attach shortcut tooltips to the rendered toolbar buttons/dropdown items
     const toolbarEl = quill.getModule('toolbar')?.container;
@@ -196,7 +215,7 @@ export default function RichTextEditor({ value, onChange, placeholder, error }) 
     // Notify parent whenever content changes
     quill.on('text-change', () => {
       if (!isComposing.current && onChange) {
-        const html = quill.getSemanticHTML();
+        const html = quill.root?.innerHTML || '';
         // Treat empty editor as empty string
         onChange(html === '<p></p>' || html === '<p><br></p>' ? '' : html);
       }
@@ -211,7 +230,7 @@ export default function RichTextEditor({ value, onChange, placeholder, error }) 
     if (!quill) return;
 
     // Only update if content actually differs to avoid cursor jumping
-    const currentHtml = quill.getSemanticHTML();
+    const currentHtml = quill.root?.innerHTML || '';
     if (currentHtml !== value && !quill.hasFocus()) {
       isComposing.current = true;
       quill.clipboard.dangerouslyPasteHTML(value || '');
