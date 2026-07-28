@@ -42,18 +42,50 @@ export default function DataNakes() {
     Promise.all([getAllActiveNakes(), getKategoriLayanan()])
       .then(([nakesData, kategoriData]) => {
         setKategoriList(kategoriData);
-        const mapped = nakesData.map((item) => ({
-          id: item.id_tenaga_medis ?? item.id,
-          foto: item.foto_profile ?? '/nakesgambar.jpg',
-          nama: item.nama_lengkap ?? '',
-          jenis: item.jenis_tenaga_medis ?? '',
-          nomorStr: item.no_str ?? '',
-          lulusan: item.lulusan ?? '',
-          status: 'Selesai',
-          dokumenPdf: item.foto_profile ?? '/nakesgambar.jpg',
-          kategoriLayanan: item.kategori_layanan || [],
-          wilayahLayanan: item.wilayah_layanan || '',
-        }));
+
+        const mapped = nakesData.map((item) => {
+          // 🔹 1. Parsing Kategori Layanan dari Response
+          let kategoriArr = [];
+          if (Array.isArray(item.kategori_layanan) && item.kategori_layanan.length > 0) {
+            kategoriArr = item.kategori_layanan.map((k) => ({
+              id_kategori_layanan: k.id_kategori_layanan,
+              nama_kategori: k.nama_kategori
+            }));
+          } else if (item.jenis_tenaga_medis) {
+            // Fallback jika kategori_layanan masih [] (misal: "Ibu dan Anak")
+            const names = item.jenis_tenaga_medis.split(',').map(s => s.trim()).filter(Boolean);
+            kategoriArr = names.map((name) => {
+              const matchedKat = kategoriData.find(k => k.nama_kategori.toLowerCase() === name.toLowerCase());
+              return {
+                id_kategori_layanan: matchedKat ? matchedKat.id_kategori_layanan : name,
+                nama_kategori: name
+              };
+            });
+          }
+
+          // 🔹 2. Parsing Wilayah Layanan
+          let wilayahStr = '';
+          if (item.wilayah_layanan && typeof item.wilayah_layanan === 'object') {
+            wilayahStr = item.wilayah_layanan.nama_wilayah || item.wilayah_layanan.nama || '';
+          } else if (typeof item.wilayah_layanan === 'string') {
+            wilayahStr = item.wilayah_layanan;
+          } else {
+            wilayahStr = item.alamat_lengkap ? item.alamat_lengkap.split(',')[0] : '';
+          }
+
+          return {
+            id: item.id_tenaga_medis ?? item.id,
+            foto: item.foto_profile ?? '/nakesgambar.jpg',
+            nama: item.nama_lengkap ?? (item.pasien?.nama_lengkap || ''),
+            jenis: item.jenis_tenaga_medis ?? '',
+            nomorStr: item.no_str ?? '',
+            lulusan: item.lulusan ?? '',
+            kategoriLayanan: kategoriArr,
+            wilayahLayanan: wilayahStr,
+            idWilayahLayanan: item.id_wilayah_layanan
+          };
+        });
+
         setNakesList(mapped);
       })
       .catch((err) => {
@@ -140,8 +172,11 @@ export default function DataNakes() {
       .toLowerCase()
       .includes(search.toLowerCase());
       
-    const matchesKategori = filterKategori === '' || item.kategoriLayanan.some(k => k.id_kategori_layanan.toString() === filterKategori);
-    const matchesWilayah = filterWilayah === '' || item.wilayahLayanan === filterWilayah;
+    const matchesKategori = filterKategori === '' || item.kategoriLayanan.some(k => 
+      k.id_kategori_layanan.toString() === filterKategori || k.nama_kategori.toLowerCase().includes(filterKategori.toLowerCase())
+    );
+    
+    const matchesWilayah = filterWilayah === '' || (item.wilayahLayanan && item.wilayahLayanan.toLowerCase().includes(filterWilayah.toLowerCase()));
     
     return matchesSearch && matchesKategori && matchesWilayah;
   });
@@ -157,6 +192,7 @@ export default function DataNakes() {
         <p className="page-subtitle">Kelola data tenaga medis, kategori layanan, dan wilayah operasional.</p>
       </div>
 
+      {/* Filter Section */}
       <div className="mb-5 flex flex-col gap-4 rounded-card border border-slate-200 bg-white p-4 shadow-card">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-500 flex-grow">
@@ -200,6 +236,7 @@ export default function DataNakes() {
         </div>
       )}
 
+      {/* Table Section */}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           {loading ? (
@@ -210,7 +247,7 @@ export default function DataNakes() {
                 <tr>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Nakes</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Kategori Layanan</th>
-                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Wilayah</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Wilayah Operasional</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">Aksi</th>
                 </tr>
               </thead>
@@ -226,24 +263,37 @@ export default function DataNakes() {
                     <tr key={item.id} className="hover:bg-slate-50">
                       <td className="border-b border-slate-200 px-4 py-3 text-sm">
                         <div className="flex items-center gap-3">
-                            <img src={getImageUrl(item.foto)} alt={item.nama} className="h-10 w-10 rounded-full object-cover bg-slate-200" onError={(e) => e.target.src = '/nakesgambar.jpg'} />
-                            <div>
-                                <div className="font-semibold text-slate-900">{item.nama}</div>
-                                <div className="text-xs text-slate-500">{item.jenis} - STR: {item.nomorStr}</div>
-                            </div>
+                          <img 
+                            src={getImageUrl(item.foto)} 
+                            alt={item.nama} 
+                            className="h-10 w-10 rounded-full object-cover bg-slate-200" 
+                            onError={(e) => e.target.src = '/nakesgambar.jpg'} 
+                          />
+                          <div>
+                            <div className="font-semibold text-slate-900">{item.nama}</div>
+                            <div className="text-xs text-slate-500">STR: {item.nomorStr}</div>
+                          </div>
                         </div>
                       </td>
                       <td className="border-b border-slate-200 px-4 py-3 text-sm">
                         <div className="flex flex-wrap gap-1">
-                            {item.kategoriLayanan.length > 0 ? item.kategoriLayanan.map(k => (
-                                <span key={k.id_kategori_layanan} className="bg-primary-light text-primary-dark px-2 py-0.5 rounded text-xs">
-                                    {k.nama_kategori}
-                                </span>
-                            )) : <span className="text-slate-400 italic">Belum diatur</span>}
+                          {item.kategoriLayanan.length > 0 ? (
+                            item.kategoriLayanan.map((k, idx) => (
+                              <span key={idx} className="bg-primary-light text-primary-dark px-2 py-0.5 rounded text-xs font-medium">
+                                {k.nama_kategori}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-slate-400 italic">Belum diatur</span>
+                          )}
                         </div>
                       </td>
                       <td className="border-b border-slate-200 px-4 py-3 text-sm">
-                        {item.wilayahLayanan || <span className="text-slate-400 italic">Belum diatur</span>}
+                        {item.wilayahLayanan ? (
+                          <span className="text-slate-800 font-medium">{item.wilayahLayanan}</span>
+                        ) : (
+                          <span className="text-slate-400 italic">Belum diatur</span>
+                        )}
                       </td>
                       <td className="border-b border-slate-200 px-4 py-3 text-sm">
                         <div className="flex gap-2">
@@ -270,11 +320,12 @@ export default function DataNakes() {
         )}
       </div>
 
+      {/* Modal Edit */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
-            <h3 className="mb-4 text-lg font-bold">Edit Kategori & Wilayah</h3>
-            <div className="mb-4 text-sm font-semibold text-slate-700">{selectedNakes?.nama} ({selectedNakes?.jenis})</div>
+            <h3 className="mb-2 text-lg font-bold text-slate-900">Edit Kategori & Wilayah</h3>
+            <div className="mb-4 text-sm font-semibold text-slate-600">{selectedNakes?.nama}</div>
             
             <form onSubmit={handleFormSubmit}>
               <div className="mb-4">
@@ -293,16 +344,20 @@ export default function DataNakes() {
 
               <div className="mb-6">
                 <label className="mb-2 block text-sm font-medium text-slate-700">Kategori Layanan (Bisa pilih lebih dari satu)</label>
-                <div className="flex flex-wrap gap-2">
-                    {kategoriList.map(kat => (
-                        <div 
-                            key={kat.id_kategori_layanan} 
-                            onClick={() => toggleKategoriSelection(kat.id_kategori_layanan)}
-                            className={`cursor-pointer rounded-lg border px-3 py-1.5 text-sm transition-colors ${formKategori.includes(kat.id_kategori_layanan) ? 'border-primary bg-primary text-white' : 'border-slate-300 bg-white text-slate-600 hover:border-primary'}`}
-                        >
-                            {kat.nama_kategori}
-                        </div>
-                    ))}
+                <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1">
+                  {kategoriList.map(kat => (
+                    <div 
+                      key={kat.id_kategori_layanan} 
+                      onClick={() => toggleKategoriSelection(kat.id_kategori_layanan)}
+                      className={`cursor-pointer rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+                        formKategori.includes(kat.id_kategori_layanan) 
+                          ? 'border-primary bg-primary text-white font-medium' 
+                          : 'border-slate-300 bg-white text-slate-600 hover:border-primary'
+                      }`}
+                    >
+                      {kat.nama_kategori}
+                    </div>
+                  ))}
                 </div>
               </div>
 

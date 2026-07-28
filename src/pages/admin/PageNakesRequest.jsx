@@ -213,7 +213,7 @@ export default function PageNakesRequest() {
             onChange={(e) => setWilayahFilter(e.target.value)}
             className="form-input w-full sm:w-[200px] bg-white cursor-pointer"
           >
-            <option value="all">📍 Semua Wilayah</option>
+            <option value="all">Semua Wilayah</option>
             {listWilayah.map((w) => (
               <option key={w.id} value={w.id}>
                 {w.nama}
