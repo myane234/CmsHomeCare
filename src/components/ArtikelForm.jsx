@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { KATEGORI_ARTIKEL_OPTIONS } from '../data/artikelData';
+import RichTextEditor from './RichTextEditor';
 
 const emptyForm = {
   judul_artikel: '',
@@ -32,6 +33,11 @@ export default function ArtikelForm({ initialData, onSubmit, submitting, mode, s
     setErrors((prev) => ({ ...prev, [name]: '' }));
   }
 
+  function handleRichTextChange(html) {
+    setForm((prev) => ({ ...prev, isi_artikel: html }));
+    setErrors((prev) => ({ ...prev, isi_artikel: '' }));
+  }
+
   function handleImageChange(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -46,7 +52,9 @@ export default function ArtikelForm({ initialData, onSubmit, submitting, mode, s
   function validate() {
     const newErrors = {};
     if (!form.judul_artikel.trim()) newErrors.judul_artikel = 'Judul artikel wajib diisi';
-    if (!form.isi_artikel.trim()) newErrors.isi_artikel = 'Isi artikel wajib diisi';
+    if (!form.isi_artikel || form.isi_artikel.trim() === '') {
+      newErrors.isi_artikel = 'Isi artikel wajib diisi';
+    }
     if (mode === 'tambah' && !form.gambar_artikel) {
       newErrors.gambar_artikel = 'Gambar artikel wajib diunggah';
     }
@@ -68,66 +76,73 @@ export default function ArtikelForm({ initialData, onSubmit, submitting, mode, s
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.4fr_1fr]">
-        <div className="flex flex-col">
-          <label className="form-label">Judul Artikel</label>
-          <input
-            type="text"
-            name="judul_artikel"
-            value={form.judul_artikel}
-            onChange={handleChange}
-            className="form-input"
-            placeholder="Contoh: Cara Menjaga Kesehatan di Rumah"
-          />
-          {errors.judul_artikel && <span className="field-error">{errors.judul_artikel}</span>}
+      <div className="flex flex-col gap-8">
+        {/* Row: Judul + Kategori + Gambar */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.4fr_1fr]">
+          <div className="flex flex-col">
+            <label className="form-label">Judul Artikel</label>
+            <input
+              type="text"
+              name="judul_artikel"
+              value={form.judul_artikel}
+              onChange={handleChange}
+              className="form-input"
+              placeholder="Contoh: Cara Menjaga Kesehatan di Rumah"
+            />
+            {errors.judul_artikel && <span className="field-error">{errors.judul_artikel}</span>}
 
-          <label className="form-label">Kategori</label>
-          <select
-            name="kategori_artikel"
-            value={form.kategori_artikel}
-            onChange={handleChange}
-            className="form-input"
-          >
-            {KATEGORI_ARTIKEL_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </select>
+            <label className="form-label">Kategori</label>
+            <select
+              name="kategori_artikel"
+              value={form.kategori_artikel}
+              onChange={handleChange}
+              className="form-input"
+            >
+              {KATEGORI_ARTIKEL_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <label className="form-label">Isi Artikel</label>
-          <textarea
-            name="isi_artikel"
-            value={form.isi_artikel}
-            onChange={handleChange}
-            className="form-input resize-y"
-            placeholder="Tulis isi artikel di sini..."
-            rows={8}
-          />
-          {errors.isi_artikel && <span className="field-error">{errors.isi_artikel}</span>}
+          <div className="flex flex-col">
+            <label className="form-label">Gambar Artikel</label>
+            <div className="flex flex-col items-center gap-3.5 rounded-card border border-dashed border-slate-200 bg-slate-50 p-5">
+              {preview ? (
+                <img
+                  src={preview}
+                  alt="Preview"
+                  className="aspect-video w-full rounded-lg object-cover"
+                />
+              ) : (
+                <div className="flex aspect-video w-full items-center justify-center rounded-lg border border-slate-200 bg-white p-2.5 text-center text-[13px] text-slate-500">
+                  Belum ada gambar
+                </div>
+              )}
+              <label className="btn-outline block w-full cursor-pointer text-center">
+                Pilih Gambar
+                <input type="file" accept="image/*" onChange={handleImageChange} hidden />
+              </label>
+              {errors.gambar_artikel && <span className="field-error">{errors.gambar_artikel}</span>}
+              <p className="text-center text-xs text-slate-400">Maks. 2MB, format gambar</p>
+            </div>
+          </div>
         </div>
 
+        {/* Isi Artikel – Rich Text Editor */}
         <div className="flex flex-col">
-          <label className="form-label">Gambar Artikel</label>
-          <div className="flex flex-col items-center gap-3.5 rounded-card border border-dashed border-slate-200 bg-slate-50 p-5">
-            {preview ? (
-              <img
-                src={preview}
-                alt="Preview"
-                className="aspect-video w-full rounded-lg object-cover"
-              />
-            ) : (
-              <div className="flex aspect-video w-full items-center justify-center rounded-lg border border-slate-200 bg-white p-2.5 text-center text-[13px] text-slate-500">
-                Belum ada gambar
-              </div>
-            )}
-            <label className="btn-outline block w-full cursor-pointer text-center">
-              Pilih Gambar
-              <input type="file" accept="image/*" onChange={handleImageChange} hidden />
-            </label>
-            {errors.gambar_artikel && <span className="field-error">{errors.gambar_artikel}</span>}
-            <p className="text-center text-xs text-slate-400">Maks. 2MB, format gambar</p>
-          </div>
+          <label className="form-label mt-0">Isi Artikel</label>
+          <p className="mb-2 text-xs text-slate-400">
+            Gunakan toolbar di atas editor untuk <strong>Bold</strong>, <em>Italic</em>, ukuran teks, dan sisipkan tautan.
+          </p>
+          <RichTextEditor
+            value={form.isi_artikel}
+            onChange={handleRichTextChange}
+            placeholder="Tulis isi artikel di sini..."
+            error={!!errors.isi_artikel}
+          />
+          {errors.isi_artikel && <span className="field-error">{errors.isi_artikel}</span>}
         </div>
       </div>
 

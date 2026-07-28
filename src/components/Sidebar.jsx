@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import logo from '../assets/logo.png';
-import { FaStethoscope, FaGift, FaRegFileAlt, FaChartBar, FaUserShield } from 'react-icons/fa';
+import { FaStethoscope, FaGift, FaRegFileAlt, FaChartBar, FaUserShield, FaAngleLeft, FaAngleRight } from 'react-icons/fa';
 import { isSuperAdmin } from '../utils/role';
 
 const menuItems = [
@@ -35,8 +35,16 @@ export default function Sidebar({ open, onClose, width }) {
         }
         style={{ width: `${width}px`, minWidth: '220px', maxWidth: '420px' }}
       >
-        <div className="flex flex-col items-start gap-1 bg-accent px-5 py-5 border-b border-slate-200">
-          <img src={logo} alt="Smartcare" className="h-10 w-auto object-contain" />
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} border-b border-slate-200 bg-accent px-3 py-4`}>
+          <img src={logo} alt="Smartcare" className={collapsed ? 'h-8 w-8 object-contain' : 'h-10 w-auto object-contain'} />
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="hidden rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100 md:inline-flex"
+            aria-label={collapsed ? 'Perbesar sidebar' : 'Perkecil sidebar'}
+          >
+            {collapsed ? <FaAngleRight /> : <FaAngleLeft />}
+          </button>
         </div>
 
         <nav className="flex flex-col gap-1 p-3">
@@ -45,26 +53,30 @@ export default function Sidebar({ open, onClose, width }) {
               key={item.to}
               to={item.to}
               onClick={onClose}
+              title={collapsed ? item.label : undefined}
               className={({ isActive }) =>
                 'flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors ' +
+                (collapsed ? 'justify-center px-2.5' : '') +
+                ' ' +
                 (isActive
                   ? 'bg-primary-light font-bold text-primary-dark'
                   : 'text-slate-500 hover:bg-primary-light hover:text-primary-dark')
               }
             >
               <span className="w-5 text-center text-base">{item.icon}</span>
-              {item.label}
+              {!collapsed && <span>{item.label}</span>}
             </NavLink>
           ))}
         </nav>
 
-        <div className="mt-auto p-4 border-t border-slate-200">
+        <div className="mt-auto border-t border-slate-200 p-4">
           <a
             href="/super-admin/login"
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary-light px-4 py-2.5 text-sm font-bold text-primary-dark hover:bg-primary hover:text-white transition-colors"
+            title={collapsed ? 'Login Super Admin' : undefined}
+            className={`flex w-full items-center rounded-lg bg-primary-light px-4 py-2.5 text-sm font-bold text-primary-dark transition-colors hover:bg-primary hover:text-white ${collapsed ? 'justify-center' : 'justify-center gap-2'}`}
           >
             <FaUserShield />
-            Login Super Admin
+            {!collapsed && <span>Login Super Admin</span>}
           </a>
         </div>
       </aside>

@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import logo from '../../assets/logo.png';
-import { FaChartBar, FaUserMd, FaUserPlus } from 'react-icons/fa';
+import { FaChartBar, FaUserMd, FaUserPlus, FaAngleLeft, FaAngleRight } from 'react-icons/fa';
 
 const menuItems = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: <FaChartBar /> },
@@ -26,9 +26,20 @@ export default function AdminSidebar({ open, onClose, width }) {
         }
         style={{ width: `${width}px`, minWidth: '220px', maxWidth: '420px' }}
       >
-        {/* Diubah dari bg-accent menjadi bg-white */}
-        <div className="flex flex-col items-start gap-1 bg-white px-5 py-5">
-          <img src={logo} alt="Smartcare" className="h-10 w-auto object-contain" />
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} border-b border-slate-200 bg-white px-3 py-4`}>
+          <img
+            src={logo}
+            alt="Smartcare"
+            className={collapsed ? 'h-8 w-8 object-contain' : 'h-10 w-auto object-contain'}
+          />
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="hidden rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100 md:inline-flex"
+            aria-label={collapsed ? 'Perbesar sidebar' : 'Perkecil sidebar'}
+          >
+            {collapsed ? <FaAngleRight /> : <FaAngleLeft />}
+          </button>
         </div>
 
         <nav className="flex flex-col gap-1 p-3">
@@ -36,16 +47,20 @@ export default function AdminSidebar({ open, onClose, width }) {
             <NavLink
               key={item.to}
               to={item.to}
+              end={item.to === '/admin/nakes'}
               onClick={onClose}
+              title={collapsed ? item.label : undefined}
               className={({ isActive }) =>
                 'flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors ' +
+                (collapsed ? 'justify-center px-2.5' : '') +
+                ' ' +
                 (isActive
                   ? 'bg-primary-light font-bold text-primary-dark'
                   : 'text-slate-500 hover:bg-primary-light hover:text-primary-dark')
               }
             >
               <span className="w-5 text-center text-base">{item.icon}</span>
-              {item.label}
+              {!collapsed && <span>{item.label}</span>}
             </NavLink>
           ))}
         </nav>

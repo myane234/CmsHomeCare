@@ -107,13 +107,22 @@ export default function AdminLayout() {
       <div className="flex flex-1 flex-col overflow-y-auto">
         {/* Diubah dari bg-accent menjadi bg-white */}
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between bg-white px-4 sm:px-7">
-          <button
-            className="rounded-lg p-2 text-xl md:hidden"
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Buka menu"
-          >
-            ☰
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              className="rounded-lg p-2 text-xl md:hidden"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Buka menu"
+            >
+              ☰
+            </button>
+            {/* <button
+              className="hidden rounded-lg p-2 text-lg text-slate-600 transition-colors hover:bg-slate-100 md:inline-flex"
+              onClick={() => setSidebarCollapsed((value) => !value)}
+              aria-label={sidebarCollapsed ? 'Perbesar sidebar' : 'Perkecil sidebar'}
+            >
+              {sidebarCollapsed ? '⟶' : '⟵'}
+            </button> */}
+          </div>
           <div className="hidden md:block" />
 
           <div className="relative" ref={menuRef}>
