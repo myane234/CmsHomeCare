@@ -422,7 +422,7 @@ export default function PageNakesRequest() {
                                 className="btn-primary btn-sm"
                                 onClick={() => setApproveTarget(item)}
                               >
-                                Setujui Akun Nakes
+                                Setujui
                               </button>
 
                               <button

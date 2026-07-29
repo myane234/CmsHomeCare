@@ -5,6 +5,11 @@ import AdminSidebar from '../pages/admin/AdminSidebar';
 import { getSession, logout } from '../utils/auth';
 import { isSuperAdmin } from '../utils/role';
 
+const SIDEBAR_STORAGE_KEY = 'sidebar-width';
+const SIDEBAR_MIN_WIDTH = 220;
+const SIDEBAR_MAX_WIDTH = 420;
+const SIDEBAR_DEFAULT_WIDTH = 280;
+
 export default function AdminLayout() {
   const navigate  = useNavigate();
   const location  = useLocation();
@@ -15,6 +20,8 @@ export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);   // desktop collapse state
 
   const menuRef = useRef(null);
+  const startXRef = useRef(0);
+  const startWidthRef = useRef(sidebarWidth);
   const useAdminSidebar = location.pathname.startsWith('/admin');
 
   // Restore collapsed preference from localStorage
@@ -31,14 +38,43 @@ export default function AdminLayout() {
   }
 
   useEffect(() => {
-    function handleClickOutside(e) {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setOpen(false);
-      }
+    if (!isResizing) return undefined;
+
+    function handleMouseMove(event) {
+      const delta = event.clientX - startXRef.current;
+      const nextWidth = Math.min(
+        SIDEBAR_MAX_WIDTH,
+        Math.max(SIDEBAR_MIN_WIDTH, startWidthRef.current + delta)
+      );
+      setSidebarWidth(nextWidth);
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+
+    function handleMouseUp() {
+      setIsResizing(false);
+    }
+
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarWidth.toString());
+  }, [sidebarWidth]);
+
+  function handleResizeMouseDown(event) {
+    startXRef.current = event.clientX;
+    startWidthRef.current = sidebarWidth;
+    setIsResizing(true);
+  }
 
   function handleLogout() {
     logout();
@@ -60,6 +96,15 @@ export default function AdminLayout() {
       ) : (
         <Sidebar {...sidebarProps} />
       )}
+
+      <div
+        className="hidden md:block cursor-col-resize bg-slate-100 hover:bg-slate-200"
+        style={{ width: '6px' }}
+        onMouseDown={handleResizeMouseDown}
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize sidebar"
+      />
 
       {/* Area Kanan (Header + Konten Utama) */}
       <div className="flex flex-1 flex-col overflow-y-auto min-w-0">

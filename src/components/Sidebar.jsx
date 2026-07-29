@@ -93,6 +93,7 @@ export default function Sidebar({ open, onClose, collapsed, onCollapse }) {
           'transition-transform duration-200 md:relative md:translate-x-0 ' +
           (open ? 'translate-x-0' : '-translate-x-full md:translate-x-0')
         }
+        style={{ width: collapsed ? '80px' : `${width}px` }}
       >
         {/* Inner panel — carries the background/border/shadow and clips its own content only */}
         <div
