@@ -5,8 +5,9 @@ import { FaChartBar, FaUserMd, FaUserPlus, FaCalendarCheck, FaAngleLeft } from '
 
 const menuItems = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: <FaChartBar /> },
-  { to: '/admin/nakes', label: 'Master Data Nakes', icon: <FaUserMd /> },
-  { to: '/admin/nakes/requests', label: 'Request Nakes', icon: <FaUserPlus /> },
+  // 🎯 Prop 'end: true' ditambahkan khusus untuk rute induk /admin/nakes
+  { to: '/admin/nakes', label: 'Master Data Nakes', icon: <FaUserMd />, end: true },
+  { to: '/admin/nakes/requests', label: 'Master Registrasi Nakes', icon: <FaUserPlus /> },
   { to: '/admin/booking', label: 'Manajemen Booking', icon: <FaCalendarCheck /> },
 ];
 
@@ -14,7 +15,7 @@ const COLLAPSED_WIDTH = 68;
 const MIN_WIDTH = 200;
 const MAX_WIDTH = 360;
 const DEFAULT_WIDTH = 240;
-const STORAGE_KEY = 'sidebar_width';
+const STORAGE_KEY = 'admin_sidebar_width';
 
 export default function AdminSidebar({ open, onClose, collapsed, onCollapse }) {
   const [width, setWidth] = useState(() => {
@@ -75,6 +76,7 @@ export default function AdminSidebar({ open, onClose, collapsed, onCollapse }) {
         />
       )}
 
+      {/* 🟢 FIX 1: Menggabungkan style ke dalam 1 objek tunggal */}
       <aside
         ref={asideRef}
         style={{
@@ -86,7 +88,6 @@ export default function AdminSidebar({ open, onClose, collapsed, onCollapse }) {
           'transition-transform duration-200 md:relative md:translate-x-0 ' +
           (open ? 'translate-x-0' : '-translate-x-full md:translate-x-0')
         }
-        style={{ width: collapsed ? '80px' : `${width}px` }}
       >
         {/* Inner panel */}
         <div
@@ -121,6 +122,7 @@ export default function AdminSidebar({ open, onClose, collapsed, onCollapse }) {
               <NavLink
                 key={item.to}
                 to={item.to}
+                end={item.end} // 🟢 FIX 2: Mencegah 'Master Data Nakes' ikut aktif saat buka '/admin/nakes/requests'
                 onClick={onClose}
                 title={collapsed ? item.label : undefined}
                 className={({ isActive }) =>
@@ -166,9 +168,8 @@ export default function AdminSidebar({ open, onClose, collapsed, onCollapse }) {
             ))}
           </nav>
         </div>
-        {/* ^ closes inner overflow-hidden panel */}
 
-        {/* Drag-to-resize handle — desktop only, disabled while collapsed */}
+        {/* Drag-to-resize handle */}
         {!collapsed && (
           <div
             onMouseDown={handleResizeStart}
@@ -189,7 +190,7 @@ export default function AdminSidebar({ open, onClose, collapsed, onCollapse }) {
           </div>
         )}
 
-        {/* Collapse toggle — floats on the outer edge of the sidebar */}
+        {/* Collapse toggle */}
         <button
           onClick={onCollapse}
           className="group/toggle hidden md:flex absolute top-6 right-0 translate-x-1/2 z-50 h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition-all duration-150 hover:border-primary hover:text-primary hover:shadow-md"

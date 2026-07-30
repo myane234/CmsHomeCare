@@ -11,23 +11,41 @@ const SIDEBAR_MAX_WIDTH = 420;
 const SIDEBAR_DEFAULT_WIDTH = 280;
 
 export default function AdminLayout() {
-  const navigate  = useNavigate();
-  const location  = useLocation();
-  const session   = getSession();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const session = getSession();
 
-  const [open, setOpen]           = useState(false);   // user dropdown
-  const [sidebarOpen, setSidebarOpen]   = useState(false);   // mobile sidebar drawer
-  const [collapsed, setCollapsed] = useState(false);   // desktop collapse state
+  const [open, setOpen] = useState(false); // User dropdown
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile sidebar drawer
+  const [collapsed, setCollapsed] = useState(false); // Desktop collapse state
+
+  // State untuk Resize Sidebar (sebelumnya terlewat)
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = localStorage.getItem(SIDEBAR_STORAGE_KEY);
+    return saved ? parseInt(saved, 10) : SIDEBAR_DEFAULT_WIDTH;
+  });
+  const [isResizing, setIsResizing] = useState(false);
 
   const menuRef = useRef(null);
   const startXRef = useRef(0);
   const startWidthRef = useRef(sidebarWidth);
   const useAdminSidebar = location.pathname.startsWith('/admin');
 
-  // Restore collapsed preference from localStorage
+  // Restore collapsed preference dari localStorage
   useEffect(() => {
     const saved = localStorage.getItem('cms_sidebar_collapsed');
     if (saved === 'true') setCollapsed(true);
+  }, []);
+
+  // Handle click outside untuk menutup dropdown profil
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   function toggleCollapse() {
@@ -37,6 +55,7 @@ export default function AdminLayout() {
     });
   }
 
+  // Handle Drag-to-Resize Sidebar
   useEffect(() => {
     if (!isResizing) return undefined;
 
@@ -66,6 +85,7 @@ export default function AdminLayout() {
     };
   }, [isResizing]);
 
+  // Simpan sidebarWidth ke localStorage
   useEffect(() => {
     localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarWidth.toString());
   }, [sidebarWidth]);
@@ -86,6 +106,7 @@ export default function AdminLayout() {
     onClose: () => setSidebarOpen(false),
     collapsed,
     onCollapse: toggleCollapse,
+    width: sidebarWidth, // Mengirim properti width ke komponen Sidebar jika dibutuhkan
   };
 
   return (
@@ -97,8 +118,9 @@ export default function AdminLayout() {
         <Sidebar {...sidebarProps} />
       )}
 
+      {/* Resize Handle (Garis batas pemisah yang bisa digeser) */}
       <div
-        className="hidden md:block cursor-col-resize bg-slate-100 hover:bg-slate-200"
+        className="hidden md:block cursor-col-resize bg-slate-100 hover:bg-slate-200 transition-colors"
         style={{ width: '6px' }}
         onMouseDown={handleResizeMouseDown}
         role="separator"
@@ -121,7 +143,7 @@ export default function AdminLayout() {
             </svg>
           </button>
 
-          {/* Spacer for desktop (hamburger is hidden) */}
+          {/* Spacer for desktop */}
           <div className="hidden md:block" />
 
           {/* User dropdown */}
@@ -160,7 +182,7 @@ export default function AdminLayout() {
                 </div>
                 <div className="my-3.5 h-px bg-slate-100" />
                 <button
-                  className="flex w-full items-center gap-2.5 rounded-xl bg-slate-50 px-3.5 py-2.5 text-left text-[13px] font-semibold text-slate-700 hover:bg-danger-bg hover:text-danger transition-colors"
+                  className="flex w-full items-center gap-2.5 rounded-xl bg-slate-50 px-3.5 py-2.5 text-left text-[13px] font-semibold text-slate-700 hover:bg-rose-50 hover:text-rose-600 transition-colors"
                   onClick={handleLogout}
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

@@ -14,12 +14,15 @@ import PromoEdit from './pages/PromoEdit';
 import PageArtikel from './pages/PageArtikel';
 import FormTambahArtikel from './pages/FormTambahArtikel';
 import FormEditArtikel from './pages/FormEditArtikel';
-import PageNakesRequest from './pages/admin/PageNakesRequest';
+import PageNakesRequest from './pages/admin/registerNakes/PageNakesRequest';
+import PageNakesRequestDetail from './pages/admin/RegisterNakes/PageNakesRequestDetail';
 import PageBooking from './pages/admin/PageBooking';
 import AdminLayout from './components/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import KelolaAdmin from './pages/KelolaAdmin';
 import { getUserRoles } from './utils/role';
+
+import 'leaflet/dist/leaflet.css';
 
 function RootRedirect() {
   const userRoles = getUserRoles();
@@ -68,6 +71,7 @@ function App() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/nakes" element={<DataNakes />} />
         <Route path="/admin/nakes/requests" element={<PageNakesRequest />} />
+        <Route path="/nakes-request/:id" element={<PageNakesRequestDetail />} />
         <Route path="/admin/booking" element={<PageBooking />} />
         <Route path="/kelola-admin" element={<KelolaAdmin />} />
       </Route>
