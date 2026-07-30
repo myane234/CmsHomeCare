@@ -21,6 +21,8 @@ import AdminLayout from './components/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import KelolaAdmin from './pages/KelolaAdmin';
 import DataUser from './pages/admin/AdminUser';
+import DataBarang from './pages/admin/AdminMasterBarang'
+import DataMasterTarif from './pages/admin/AdminMasterTarif';
 import { getUserRoles } from './utils/role';
 
 import 'leaflet/dist/leaflet.css';
@@ -76,6 +78,10 @@ function App() {
         <Route path="/admin/booking" element={<PageBooking />} />
         <Route path="/admin/users" element={<DataUser/>} />
         <Route path="/kelola-admin" element={<KelolaAdmin />} />
+        {/**master Data Barang */}
+        <Route path="/admin/master-barang" element={<DataBarang/>} />
+        {/**Master Tarif */}
+        <Route path="/admin/master-tarif" element={<DataMasterTarif/>}/>
       </Route>
 
       {/* Default redirect */}

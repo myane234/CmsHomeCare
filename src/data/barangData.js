@@ -17,8 +17,8 @@ function extractData(body) {
   return body;
 }
 
-export async function getAllUsers() {
-  const res = await fetch(`${URL}/admin/pasien`, {
+export async function getAllBarang() {
+  const res = await fetch(`${URL}/bhp-items`, {
     method: 'GET',
     headers: getAuthHeaders({
       'Content-Type': 'application/json',
@@ -31,8 +31,22 @@ export async function getAllUsers() {
   return Array.isArray(data) ? data : (data ? [data] : []);
 }
 
-export async function updateUserData(idPasien, data) {
-  const res = await fetch(`${URL}/admin/pasien/${encodeURIComponent(idPasien)}`, {
+export async function createBarangData(data) {
+  const res = await fetch(`${URL}/bhp-items`, {
+    method: 'POST',
+    headers: getAuthHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    }),
+    body: JSON.stringify(data),
+  });
+
+  const json = await parseJsonResponse(res);
+  return extractData(json);
+}
+
+export async function updateBarangData(idBhp, data) {
+  const res = await fetch(`${URL}/bhp-items/${encodeURIComponent(idBhp)}`, {
     method: 'PUT',
     headers: getAuthHeaders({
       'Content-Type': 'application/json',
@@ -45,8 +59,8 @@ export async function updateUserData(idPasien, data) {
   return extractData(json);
 }
 
-export async function deleteUserData(idPasien) {
-  const res = await fetch(`${URL}/admin/pasien/${encodeURIComponent(idPasien)}`, {
+export async function deleteBarangData(idBhp) {
+  const res = await fetch(`${URL}/bhp-items/${encodeURIComponent(idBhp)}`, {
     method: 'DELETE',
     headers: getAuthHeaders({
       'Accept': 'application/json',
@@ -54,16 +68,4 @@ export async function deleteUserData(idPasien) {
   });
 
   return await parseJsonResponse(res);
-}
-
-export async function toggleUserStatus(idPasien) {
-  const res = await fetch(`${URL}/admin/pasien/${encodeURIComponent(idPasien)}`, {
-    method: 'PATCH',
-    headers: getAuthHeaders({
-      'Accept': 'application/json',
-    }),
-  });
-
-  const json = await parseJsonResponse(res);
-  return extractData(json);
 }

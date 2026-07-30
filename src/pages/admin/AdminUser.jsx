@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { FaSearch, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaSearch, FaEdit, FaTrash, FaToggleOn, FaToggleOff } from 'react-icons/fa';
 import Pagination from '../../components/pagination';
-import { getAllUsers, updateUserData, deleteUserData } from '../../data/userData';
+import { getAllUsers, updateUserData, deleteUserData, toggleUserStatus } from '../../data/userData';
 import Swal from 'sweetalert2';
 
 export default function DataUser() {
@@ -114,6 +114,33 @@ export default function DataUser() {
           fetchData();
         } catch (err) {
           Swal.fire('Gagal!', err.message || 'Terjadi kesalahan saat menghapus data pasien.', 'error');
+        }
+      }
+    });
+  };
+
+  const handleToggleStatusClick = async (user) => {
+    const isActive = user.user?.is_active;
+    const statusText = isActive ? 'menonaktifkan' : 'mengaktifkan';
+    
+    Swal.fire({
+      title: 'Ubah Status Akun?',
+      text: `Apakah Anda yakin ingin ${statusText} akun untuk pasien ${user.nama_lengkap}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Ya, Ubah!',
+      cancelButtonText: 'Batal'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          // Ganti dengan id_pasien karena route backend menargetkan data pasien
+          await toggleUserStatus(user.id_pasien);
+          Swal.fire('Berhasil!', 'Status akun berhasil diperbarui.', 'success');
+          fetchData();
+        } catch (err) {
+          Swal.fire('Gagal!', err.message || 'Terjadi kesalahan saat mengubah status akun.', 'error');
         }
       }
     });
@@ -273,12 +300,37 @@ export default function DataUser() {
                         )}
                       </td>
                       <td className="border-b border-slate-200 px-4 py-3.5 text-sm text-center">
-                        <div className="flex gap-2 justify-center">
-                          <button onClick={() => handleEditClick(item)} className="btn-outline btn-sm inline-flex items-center gap-1.5" title="Edit User">
-                            <FaEdit /> Edit
+                        <div className="flex items-center justify-center gap-1.5">
+                          {/* Quick Action Toggle Status */}
+                          <button 
+                            onClick={() => handleToggleStatusClick(item)} 
+                            className={`px-2.5 py-1 text-xs font-medium rounded border transition-colors inline-flex items-center gap-1 ${
+                              item.user?.is_active 
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100' 
+                                : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200'
+                            }`}
+                            title="Ubah Status Akun"
+                          >
+                            {item.user?.is_active ? <FaToggleOn className="text-emerald-600 text-sm" /> : <FaToggleOff className="text-slate-400 text-sm" />}
+                            <span>{item.user?.is_active ? 'Aktif' : 'Nonaktif'}</span>
                           </button>
-                          <button onClick={() => handleDeleteClick(item)} className="btn-danger btn-sm inline-flex items-center gap-1.5" title="Hapus User">
-                            <FaTrash /> Hapus
+
+                          {/* Tombol Edit */}
+                          <button 
+                            onClick={() => handleEditClick(item)} 
+                            className="p-1.5 text-slate-600 bg-slate-50 border border-slate-200 rounded hover:bg-slate-100 transition-colors"
+                            title="Edit User"
+                          >
+                            <FaEdit />
+                          </button>
+
+                          {/* Tombol Hapus */}
+                          <button 
+                            onClick={() => handleDeleteClick(item)} 
+                            className="p-1.5 text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 transition-colors"
+                            title="Hapus User"
+                          >
+                            <FaTrash />
                           </button>
                         </div>
                       </td>
