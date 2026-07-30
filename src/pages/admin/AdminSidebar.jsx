@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import logo from '../../assets/logo.png';
-import { FaChartBar, FaUserMd, FaUserPlus, FaCalendarCheck, FaAngleLeft } from 'react-icons/fa';
+import { FaChartBar, FaUserMd, FaUserPlus, FaCalendarCheck, FaAngleLeft, FaUsers } from 'react-icons/fa';
 
 const menuItems = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: <FaChartBar /> },
+  { to: '/admin/users', label: 'Master Data User', icon: <FaUsers /> },
   // 🎯 Prop 'end: true' ditambahkan khusus untuk rute induk /admin/nakes
   { to: '/admin/nakes', label: 'Master Data Nakes', icon: <FaUserMd />, end: true },
   { to: '/admin/nakes/requests', label: 'Master Registrasi Nakes', icon: <FaUserPlus /> },
