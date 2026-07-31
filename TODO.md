@@ -1,11 +1,14 @@
-# TODO: Implementasi Super Admin ✅
+# TODO: Create Master Provinsi Page
 
-## Steps
-- [x] Analisis kodebase dan buat rencana
-- [x] **Step 1:** Buat `src/utils/role.js` — Helper role checking
-- [x] **Step 2:** Update `src/components/ProtectedRoute.jsx` — Role-based route protection
-- [x] **Step 3:** Update `src/components/Sidebar.jsx` — Filter menu berdasarkan role + tambah menu Super Admin
-- [x] **Step 4:** Update `src/components/AdminLayout.jsx` — Tampilkan badge role di dropdown
-- [x] **Step 5:** Update `src/App.jsx` — Register route baru untuk Super Admin
-- [x] **Step 6:** Buat `src/pages/KelolaAdmin.jsx` — Halaman daftar admin untuk Super Admin
+## Step 1: Create data layer - `src/data/provinsiData.js`
+- [x] Create API functions: getAllProvinsi, createProvinsi, updateProvinsi, deleteProvinsi, toggleStatusProvinsi
+
+## Step 2: Create page component - `src/pages/admin/AdminMasterProvinsi.jsx`
+- [x] Create page with table, search, filter, pagination, modal, toggle status, delete
+
+## Step 3: Add route in `src/App.jsx`
+- [x] Import AdminMasterProvinsi and add `<Route>` under super admin section
+
+## Step 4: Add sidebar menu in `src/pages/admin/AdminSidebar.jsx`
+- [x] Add menu item for 'Master Provinsi' with FaGlobe icon
 

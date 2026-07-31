@@ -23,6 +23,7 @@ import KelolaAdmin from './pages/KelolaAdmin';
 import DataUser from './pages/admin/AdminUser';
 import DataBarang from './pages/admin/AdminMasterBarang'
 import DataMasterTarif from './pages/admin/AdminMasterTarif';
+import AdminMasterProvinsi from './pages/admin/AdminMasterProvinsi';
 import { getUserRoles } from './utils/role';
 
 import 'leaflet/dist/leaflet.css';
@@ -82,6 +83,8 @@ function App() {
         <Route path="/admin/master-barang" element={<DataBarang/>} />
         {/**Master Tarif */}
         <Route path="/admin/master-tarif" element={<DataMasterTarif/>}/>
+        {/**Master Provinsi */}
+        <Route path="/admin/provinsi" element={<AdminMasterProvinsi/>}/>
       </Route>
 
       {/* Default redirect */}
