@@ -3,6 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom';
 import PromoForm from '../components/PromoForm';
 import { getPromoById, updatePromo } from '../data/PromoEndpoint';
 
+// 🟢 Helper untuk ubah tanggal dari database ke format YYYY-MM-DD
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+  return date.toISOString().split('T')[0];
+};
+
 export default function PromoEdit() {
   const { id_promo } = useParams();
   const navigate = useNavigate();
@@ -11,7 +19,19 @@ export default function PromoEdit() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    getPromoById(id_promo).then(setInitialData).finally(() => setLoading(false));
+    getPromoById(id_promo)
+      .then((data) => {
+        if (data) {
+          // 🟢 Format tanggal sebelum dimasukkan ke initialData
+          setInitialData({
+            ...data,
+            tanggal_mulai: formatDate(data.tanggal_mulai),
+            tanggal_berakhir: formatDate(data.tanggal_berakhir),
+          });
+        }
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
   }, [id_promo]);
 
   async function handleSubmit(data) {
