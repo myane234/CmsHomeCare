@@ -134,7 +134,7 @@ export default function ArtikelForm({ initialData, onSubmit, submitting, mode, s
         <div className="flex flex-col">
           <label className="form-label mt-0">Isi Artikel</label>
           <RichTextEditor
-            key={mode === 'edit' ? `article-editor-${initialData?.id || 'new'}` : 'article-editor-new'}
+            key={initialData?.id ? `editor-${initialData.id}` : 'editor-new'}
             value={form.isi_artikel}
             onChange={handleRichTextChange}
             placeholder="Tulis isi artikel di sini..."

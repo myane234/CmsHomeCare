@@ -26,7 +26,7 @@ const SizeStyle = Quill.import('attributors/style/size');
 SizeStyle.whitelist = SIZE_OPTIONS.map((opt) => opt.value);
 Quill.register(SizeStyle, true);
 
-// Custom toolbar options: Heading, Font Size (numeric), Bold/Italic/Underline, Link, Lists, Blockquote, Clean
+// Custom toolbar options
 const TOOLBAR_OPTIONS = [
   [{ header: [1, 2, 3, false] }],
   [{ size: [false, ...SIZE_OPTIONS.map((opt) => opt.value)] }],
@@ -37,8 +37,7 @@ const TOOLBAR_OPTIONS = [
   ['clean'],
 ];
 
-// Tooltip text (with keyboard shortcuts) shown on hover, keyed by CSS selector
-// scoped to the toolbar container.
+// Tooltip text (with keyboard shortcuts)
 const TOOLTIP_MAP = {
   '.ql-header .ql-picker-label': 'Gaya Heading',
   '.ql-header .ql-picker-item[data-value="1"]': 'Heading 1 (Ctrl+Alt+1)',
@@ -88,7 +87,6 @@ function ensureEditorStylesInjected() {
       min-width: 5rem;
     }
 
-    /* --- Responsive editor box: toolbar stays fixed, editor area scrolls --- */
     .rte-wrapper .ql-toolbar.ql-snow {
       border-top-left-radius: 0.5rem;
       border-top-right-radius: 0.5rem;
@@ -113,12 +111,10 @@ function ensureEditorStylesInjected() {
         max-height: 40vh;
       }
     }
-    /* Let the link-edit popup / tooltips escape the box instead of being clipped */
     .rte-wrapper .ql-tooltip {
       z-index: 30;
     }
 
-    /* --- Word-style shortcut tooltips --- */
     .ql-toolbar.ql-snow [data-tooltip] {
       position: relative;
     }
@@ -151,7 +147,6 @@ function ensureEditorStylesInjected() {
       z-index: 60;
       pointer-events: none;
     }
-    /* Keep tooltips above dropdown panels */
     .ql-toolbar.ql-snow .ql-picker-item[data-tooltip] {
       position: relative;
     }
@@ -159,23 +154,14 @@ function ensureEditorStylesInjected() {
   document.head.appendChild(style);
 }
 
-/**
- * RichTextEditor – Quill-based WYSIWYG editor.
- *
- * Props:
- *   value      {string}   – HTML string (controlled from parent)
- *   onChange   {function} – called with new HTML string whenever content changes
- *   placeholder {string}  – editor placeholder text
- *   error      {boolean}  – show error border when true
- */
 export default function RichTextEditor({ value, onChange, placeholder, error }) {
   const containerRef = useRef(null);
-  const quillRef    = useRef(null);
-  const isComposing  = useRef(false); // track internal vs external updates
+  const quillRef = useRef(null);
+  const isInternalChange = useRef(false);
 
-  // Initialise Quill once
+  // Initialize Quill once
   useEffect(() => {
-    if (quillRef.current) return; // already initialised
+    if (quillRef.current) return;
 
     ensureEditorStylesInjected();
 
@@ -198,11 +184,12 @@ export default function RichTextEditor({ value, onChange, placeholder, error }) 
 
     quillRef.current = quill;
 
+    // Load initial value on mount if available
     if (value) {
       quill.clipboard.dangerouslyPasteHTML(value);
     }
 
-    // Attach shortcut tooltips to the rendered toolbar buttons/dropdown items
+    // Attach shortcut tooltips
     const toolbarEl = quill.getModule('toolbar')?.container;
     if (toolbarEl) {
       Object.entries(TOOLTIP_MAP).forEach(([selector, text]) => {
@@ -212,29 +199,33 @@ export default function RichTextEditor({ value, onChange, placeholder, error }) 
       });
     }
 
-    // Notify parent whenever content changes
+    // Notify parent on user input
     quill.on('text-change', () => {
-      if (!isComposing.current && onChange) {
+      if (!isInternalChange.current && onChange) {
         const html = quill.root?.innerHTML || '';
-        // Treat empty editor as empty string
-        onChange(html === '<p></p>' || html === '<p><br></p>' ? '' : html);
+        const cleanHtml = html === '<p></p>' || html === '<p><br></p>' ? '' : html;
+        onChange(cleanHtml);
       }
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Sync value from parent → editor (e.g. when editing an existing article)
+  // Sync value from parent -> editor when API/props change asynchronously
   useEffect(() => {
     const quill = quillRef.current;
     if (!quill) return;
 
-    // Only update if content actually differs to avoid cursor jumping
     const currentHtml = quill.root?.innerHTML || '';
-    if (currentHtml !== value && !quill.hasFocus()) {
-      isComposing.current = true;
-      quill.clipboard.dangerouslyPasteHTML(value || '');
-      isComposing.current = false;
+    const incomingValue = value || '';
+
+    // Only update if value from parent is different and not equal to empty editor default
+    const isCurrentEmpty = currentHtml === '<p><br></p>' || currentHtml === '<p></p>';
+    
+    if (incomingValue !== currentHtml && !(incomingValue === '' && isCurrentEmpty)) {
+      isInternalChange.current = true;
+      quill.clipboard.dangerouslyPasteHTML(incomingValue);
+      isInternalChange.current = false;
     }
   }, [value]);
 
@@ -245,7 +236,6 @@ export default function RichTextEditor({ value, onChange, placeholder, error }) 
         error ? 'border-red-400' : 'border-slate-200 focus-within:border-primary',
       ].join(' ')}
     >
-      {/* Quill mounts the toolbar + editor here */}
       <div ref={containerRef} />
     </div>
   );
