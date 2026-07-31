@@ -1,16 +1,23 @@
 import { NavLink } from 'react-router-dom';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import logo from '../../assets/logo.png';
-import { FaChartBar, FaUserMd, FaUserPlus, FaCalendarCheck, FaAngleLeft, FaUsers } from 'react-icons/fa';
+import { FaChartBar, FaUserMd, FaUserPlus, FaCalendarCheck, FaAngleLeft, FaUsers, FaMapMarkerAlt } from 'react-icons/fa';
 
 const menuItems = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: <FaChartBar /> },
-  { to: '/admin/users', label: 'Master Data Pasien', icon: <FaUsers /> },
-  // 🎯 Prop 'end: true' ditambahkan khusus untuk rute induk /admin/nakes
-  { to: '/admin/master-barang', label: 'Master Stock Barang', icon: <FaChartBar />},
-  { to: 'admin/master-tarif',  label: 'Master Tarif', icon: <FaChartBar />},
-  { to: '/admin/nakes', label: 'Master Data Nakes', icon: <FaUserMd />, end: true },
-  { to: '/admin/nakes/requests', label: 'Master Registrasi Nakes', icon: <FaUserPlus /> },
+  {
+    type: 'group',
+    label: 'Master Data',
+    icon: <FaUserMd />,
+    children: [
+      { to: '/admin/users', label: 'Master Data Pasien', icon: <FaUsers /> },
+      { to: '/admin/master-provinsi', label: 'Master Provinsi', icon: <FaMapMarkerAlt /> },
+      { to: '/admin/master-barang', label: 'Master Stock Barang', icon: <FaChartBar /> },
+      { to: '/admin/master-tarif', label: 'Master Tarif', icon: <FaChartBar /> },
+      { to: '/admin/nakes', label: 'Master Data Nakes', icon: <FaUserMd />, end: true },
+      { to: '/admin/nakes/requests', label: 'Master Registrasi Nakes', icon: <FaUserPlus /> },
+    ],
+  },
   { to: '/admin/booking', label: 'Manajemen Booking', icon: <FaCalendarCheck /> },
 ];
 
@@ -27,6 +34,7 @@ export default function AdminSidebar({ open, onClose, collapsed, onCollapse }) {
     return saved >= MIN_WIDTH && saved <= MAX_WIDTH ? saved : DEFAULT_WIDTH;
   });
   const [isResizing, setIsResizing] = useState(false);
+  const [masterDataOpen, setMasterDataOpen] = useState(true);
   const asideRef = useRef(null);
 
   const currentWidth = collapsed ? COLLAPSED_WIDTH : width;
@@ -121,54 +129,138 @@ export default function AdminSidebar({ open, onClose, collapsed, onCollapse }) {
 
           {/* Nav items */}
           <nav className="flex flex-col gap-0.5 p-2 flex-1 overflow-y-auto overflow-x-hidden">
-            {menuItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end} // 🟢 FIX 2: Mencegah 'Master Data Nakes' ikut aktif saat buka '/admin/nakes/requests'
-                onClick={onClose}
-                title={collapsed ? item.label : undefined}
-                className={({ isActive }) =>
-                  'group relative flex items-center rounded-xl transition-all duration-150 ' +
-                  (collapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3.5 py-2.5') + ' ' +
-                  (isActive
-                    ? 'bg-primary text-white shadow-[0_2px_12px_0_rgba(31,157,90,0.28)]'
-                    : 'text-slate-500 hover:bg-primary-light hover:text-primary-dark')
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <span
-                      className={
-                        'flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center text-[15px] ' +
-                        (isActive ? 'text-white' : '')
-                      }
+            {menuItems.map((item) => {
+              if (item.type === 'group') {
+                return (
+                  <div key={item.label} className="flex flex-col">
+                    <button
+                      type="button"
+                      onClick={() => setMasterDataOpen((prev) => !prev)}
+                      className="group relative flex items-center rounded-xl px-3.5 py-2.5 text-left text-sm font-medium transition-all duration-150 text-slate-500 hover:bg-primary-light hover:text-primary-dark"
                     >
-                      {item.icon}
-                    </span>
+                      <span className="flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center text-[15px]">
+                        {item.icon}
+                      </span>
 
-                    {/* Label — hides when collapsed */}
-                    <span
-                      className="text-sm font-medium whitespace-nowrap overflow-hidden"
-                      style={{
-                        maxWidth: collapsed ? '0px' : '220px',
-                        opacity: collapsed ? 0 : 1,
-                        transition: 'max-width 220ms cubic-bezier(0.4,0,0.2,1), opacity 180ms ease',
-                      }}
-                    >
-                      {item.label}
-                    </span>
-
-                    {/* Tooltip on collapsed */}
-                    {collapsed && (
-                      <span className="pointer-events-none absolute left-full ml-3 z-50 hidden rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg group-hover:flex whitespace-nowrap">
+                      <span
+                        className="ml-3 text-sm font-medium whitespace-nowrap overflow-hidden"
+                        style={{
+                          maxWidth: collapsed ? '0px' : '220px',
+                          opacity: collapsed ? 0 : 1,
+                          transition: 'max-width 220ms cubic-bezier(0.4,0,0.2,1), opacity 180ms ease',
+                        }}
+                      >
                         {item.label}
                       </span>
+
+                      {!collapsed && (
+                        <span className={`ml-auto text-[11px] transition-transform ${masterDataOpen ? 'rotate-180' : ''}`}>
+                          ▼
+                        </span>
+                      )}
+                    </button>
+
+                    {(masterDataOpen || collapsed) && (
+                      <div className={`mt-1 flex flex-col gap-1 ${collapsed ? '' : 'ml-2 border-l border-slate-200/80 pl-2'}`}>
+                        {item.children.map((child) => (
+                          <NavLink
+                            key={child.to}
+                            to={child.to}
+                            end={child.end}
+                            onClick={onClose}
+                            title={collapsed ? child.label : undefined}
+                            className={({ isActive }) =>
+                              'group relative flex items-center rounded-xl transition-all duration-150 ' +
+                              (collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2') + ' ' +
+                              (isActive
+                                ? 'bg-primary text-white shadow-[0_2px_10px_0_rgba(31,157,90,0.22)]'
+                                : 'text-slate-500 hover:bg-primary-light hover:text-primary-dark')
+                            }
+                          >
+                            {({ isActive }) => (
+                              <>
+                                <span
+                                  className={
+                                    'flex h-[20px] w-[20px] flex-shrink-0 items-center justify-center text-[13px] ' +
+                                    (isActive ? 'text-white' : '')
+                                  }
+                                >
+                                  {child.icon}
+                                </span>
+
+                                <span
+                                  className="text-sm font-medium whitespace-nowrap overflow-hidden"
+                                  style={{
+                                    maxWidth: collapsed ? '0px' : '220px',
+                                    opacity: collapsed ? 0 : 1,
+                                    transition: 'max-width 220ms cubic-bezier(0.4,0,0.2,1), opacity 180ms ease',
+                                  }}
+                                >
+                                  {child.label}
+                                </span>
+
+                                {collapsed && (
+                                  <span className="pointer-events-none absolute left-full ml-3 z-50 hidden rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg group-hover:flex whitespace-nowrap">
+                                    {child.label}
+                                  </span>
+                                )}
+                              </>
+                            )}
+                          </NavLink>
+                        ))}
+                      </div>
                     )}
-                  </>
-                )}
-              </NavLink>
-            ))}
+                  </div>
+                );
+              }
+
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  onClick={onClose}
+                  title={collapsed ? item.label : undefined}
+                  className={({ isActive }) =>
+                    'group relative flex items-center rounded-xl transition-all duration-150 ' +
+                    (collapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3.5 py-2.5') + ' ' +
+                    (isActive
+                      ? 'bg-primary text-white shadow-[0_2px_12px_0_rgba(31,157,90,0.28)]'
+                      : 'text-slate-500 hover:bg-primary-light hover:text-primary-dark')
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <span
+                        className={
+                          'flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center text-[15px] ' +
+                          (isActive ? 'text-white' : '')
+                        }
+                      >
+                        {item.icon}
+                      </span>
+
+                      <span
+                        className="text-sm font-medium whitespace-nowrap overflow-hidden"
+                        style={{
+                          maxWidth: collapsed ? '0px' : '220px',
+                          opacity: collapsed ? 0 : 1,
+                          transition: 'max-width 220ms cubic-bezier(0.4,0,0.2,1), opacity 180ms ease',
+                        }}
+                      >
+                        {item.label}
+                      </span>
+
+                      {collapsed && (
+                        <span className="pointer-events-none absolute left-full ml-3 z-50 hidden rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg group-hover:flex whitespace-nowrap">
+                          {item.label}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              );
+            })}
           </nav>
         </div>
 
