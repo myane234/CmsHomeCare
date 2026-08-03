@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { FaSearch, FaEdit, FaTrash, FaPlus, FaFileInvoiceDollar, FaArrowLeft, FaSave } from 'react-icons/fa';
+import { FaSearch, FaEdit, FaTrash, FaPlus, FaFileInvoiceDollar, FaArrowLeft, FaSave, FaConciergeBell } from 'react-icons/fa';
 import Pagination from '../../components/pagination';
 import { getAllTarif, createTarifData, updateTarifData, deleteTarifData } from '../../data/masterTarifData';
+import { getAllLayanan } from '../../data/layananData';
 import Swal from 'sweetalert2';
 
 export default function DataMasterTarif() {
@@ -34,6 +35,10 @@ export default function DataMasterTarif() {
   const [formActive, setFormActive] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Layanan State
+  const [allLayanan, setAllLayanan] = useState([]);
+  const [selectedLayananIds, setSelectedLayananIds] = useState([]);
+
   const fetchData = () => {
     getAllTarif()
       .then((data) => {
@@ -52,8 +57,17 @@ export default function DataMasterTarif() {
     Promise.resolve().then(() => {
       setLoading(true);
       fetchData();
+      getAllLayanan().then(setAllLayanan).catch(console.error);
     });
   }, []);
+
+  const toggleLayanan = (id) => {
+    if (selectedLayananIds.includes(id)) {
+      setSelectedLayananIds(selectedLayananIds.filter((item) => item !== id));
+    } else {
+      setSelectedLayananIds([...selectedLayananIds, id]);
+    }
+  };
 
   // Buka Halaman Form Tambah
   const handleOpenAddForm = () => {
@@ -66,6 +80,7 @@ export default function DataMasterTarif() {
     setFormFeeNakesNominal('0');
     setFormTransport('0');
     setFormActive(true);
+    setSelectedLayananIds([]);
     setViewMode('add');
   };
 
@@ -80,6 +95,13 @@ export default function DataMasterTarif() {
     setFormFeeNakesNominal(item.fee_nakes_nominal ?? 0);
     setFormTransport(item.tarif_transport_per_km ?? 0);
     setFormActive(Boolean(item.is_active));
+    
+    if (item.layanans) {
+      setSelectedLayananIds(item.layanans.map(l => l.id_layanan));
+    } else {
+      setSelectedLayananIds([]);
+    }
+
     setViewMode('edit');
   };
 
@@ -89,7 +111,7 @@ export default function DataMasterTarif() {
     setSelectedTarif(null);
   };
 
-  // Handle Submit (Gunakan createTarifData jika mode 'add', updateTarifData jika mode 'edit')
+  // Handle Submit
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -103,6 +125,7 @@ export default function DataMasterTarif() {
       fee_nakes_nominal: parseFloat(formFeeNakesNominal) || 0,
       tarif_transport_per_km: parseFloat(formTransport) || 0,
       is_active: formActive ? 1 : 0,
+      layanans: selectedLayananIds,
     };
 
     try {
@@ -316,6 +339,56 @@ export default function DataMasterTarif() {
                 </p>
               </div>
 
+              {/* Informational Card: Layanan Terkait (Terutama di Mode Edit) */}
+              {viewMode === 'edit' && selectedTarif && (
+                <div className="rounded-lg border border-teal-200 bg-teal-50/50 p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-teal-800 font-bold text-sm">
+                    <FaConciergeBell />
+                    <span>Layanan Menggunakan Template Ini ({selectedTarif.layanans?.length || 0})</span>
+                  </div>
+
+                  {selectedTarif.layanans && selectedTarif.layanans.length > 0 ? (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {selectedTarif.layanans.map((lay) => (
+                        <span
+                          key={lay.id_layanan}
+                          className="inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-teal-700 border border-teal-200 shadow-xs"
+                        >
+                          <span>{lay.nama_layanan}</span>
+                          <span className="text-[10px] text-teal-500 font-normal">(Rp {lay.harga?.toLocaleString('id-ID')})</span>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-500 italic">
+                      Belum ada layanan yang ditautkan ke template tarif ini. Anda dapat memilih template ini dari menu manajemen Layanan.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Piliha Layanan */}
+              <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
+                <h3 className="text-sm font-bold text-slate-800">Pilih Layanan Terkait</h3>
+                {allLayanan.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {allLayanan.map((lay) => (
+                      <label key={lay.id} className="flex items-center gap-2 cursor-pointer text-sm hover:bg-slate-50 p-2 rounded border border-transparent hover:border-slate-200 transition-all">
+                        <input
+                          type="checkbox"
+                          className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                          checked={selectedLayananIds.includes(lay.id)}
+                          onChange={() => toggleLayanan(lay.id)}
+                        />
+                        <span className="text-slate-700 flex-1 truncate">{lay.nama}</span>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500 italic">Tidak ada data layanan tersedia.</p>
+                )}
+              </div>
+
               {/* Status Checkbox */}
               <div className="flex items-center gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
                 <input
@@ -424,7 +497,7 @@ export default function DataMasterTarif() {
             <table className="w-full min-w-225 border-collapse">
               <thead>
                 <tr className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  <th className="border-b border-slate-200 px-4 py-3 text-left">Nama Template</th>
+                  <th className="border-b border-slate-200 px-4 py-3 text-left">Nama Template & Layanan</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-center">Kategori</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-right">Biaya Admin</th>
                   <th className="border-b border-slate-200 px-4 py-3 text-center">PPN (%)</th>
@@ -445,23 +518,40 @@ export default function DataMasterTarif() {
                   paginatedData.map((item) => (
                     <tr key={item.id_master_tarif} className="hover:bg-slate-50">
                       <td className="border-b border-slate-200 px-4 py-3.5 text-sm">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600 border border-amber-200">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 border border-amber-200 mt-0.5">
                             <FaFileInvoiceDollar className="text-base" />
                           </div>
                           <div>
                             <div className="font-semibold text-slate-900">{item.nama_template}</div>
                             <div className="text-xs text-slate-400">ID: #{item.id_master_tarif}</div>
+
+                            {/* Render Daftar Layanan Terhubung */}
+                            {item.layanans && item.layanans.length > 0 ? (
+                              <div className="mt-1.5 flex flex-wrap gap-1">
+                                {item.layanans.map((lay) => (
+                                  <span
+                                    key={lay.id_layanan}
+                                    className="inline-block rounded bg-teal-50 px-2 py-0.5 text-[11px] font-medium text-teal-700 border border-teal-200"
+                                  >
+                                    {lay.nama_layanan}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-[11px] text-slate-400 italic mt-0.5 block">
+                                Belum ada layanan terhubung
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>
                       <td className="border-b border-slate-200 px-4 py-3.5 text-sm text-center">
                         <span
-                          className={`inline-block px-2.5 py-0.5 rounded text-xs font-semibold uppercase ${
-                            item.kategori_tarif === 'tindakan'
-                              ? 'bg-blue-50 text-blue-700'
-                              : 'bg-purple-50 text-purple-700'
-                          }`}
+                          className={`inline-block px-2.5 py-0.5 rounded text-xs font-semibold uppercase ${item.kategori_tarif === 'tindakan'
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'bg-purple-50 text-purple-700'
+                            }`}
                         >
                           {item.kategori_tarif}
                         </span>
