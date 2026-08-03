@@ -10,15 +10,15 @@ const menuItems = [
     label: 'Master Data',
     icon: <FaUserMd />,
     children: [
-      { to: '/admin/users', label: 'Master Data Pasien', icon: <FaUsers /> },
-      { to: '/admin/master-provinsi', label: 'Master Provinsi', icon: <FaMapMarkerAlt /> },
-      { to: '/admin/master-barang', label: 'Master Stock Barang', icon: <FaChartBar /> },
-      { to: '/admin/master-tarif', label: 'Master Tarif', icon: <FaChartBar /> },
-      { to: '/admin/nakes', label: 'Master Data Nakes', icon: <FaUserMd />, end: true },
-      { to: '/admin/nakes/requests', label: 'Master Registrasi Nakes', icon: <FaUserPlus /> },
+      { to: '/admin/users', label: 'Pasien', icon: <FaUsers /> },
+      { to: '/admin/master-provinsi', label: 'Provinsi', icon: <FaMapMarkerAlt /> },
+      { to: '/admin/master-barang', label: 'Stock Barang', icon: <FaChartBar /> },
+      { to: '/admin/master-tarif', label: 'Tarif', icon: <FaChartBar /> },
+      { to: '/admin/nakes', label: 'Nakes', icon: <FaUserMd />, end: true },
+      { to: '/admin/nakes/requests', label: 'Registrasi Nakes', icon: <FaUserPlus /> },
     ],
   },
-  { to: '/admin/booking', label: 'Manajemen Booking', icon: <FaCalendarCheck /> },
+  { to: '/admin/booking', label: 'Booking', icon: <FaCalendarCheck /> },
 ];
 
 const COLLAPSED_WIDTH = 68;
